@@ -1,4 +1,7 @@
+import base64
 import html
+import mimetypes
+from pathlib import Path
 import random
 import re
 import time
@@ -190,12 +193,21 @@ div.stButton > button p {
     width: 52px;
     height: 52px;
     border-radius: 18px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 1.15rem;
     color: #ffffff !important;
+}
+
+.k-avatar img,
+.ios-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .k-meta {
@@ -310,6 +322,7 @@ div.stButton > button p {
     width: 42px;
     height: 42px;
     border-radius: 99px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -373,6 +386,18 @@ div.stButton > button p {
     font-size: 0.96rem;
     line-height: 1.52;
     word-break: break-word;
+}
+
+.ios-img-bubble {
+    max-width: 70%;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e5e5ea;
+}
+
+.ios-img-bubble img {
+    width: 100%;
+    display: block;
 }
 
 .ios-me-row {
@@ -549,15 +574,47 @@ hr {
 
 
 # -------------------------------------------------
+# 0. 이미지 로더 (로컬 images/ 폴더 또는 https:// URL 지원)
+# -------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent
+
+
+@st.cache_data
+def load_image_uri(path_or_url: str) -> str | None:
+    if not path_or_url:
+        return None
+    if path_or_url.startswith(("http://", "https://", "data:")):
+        return path_or_url
+    file_path = BASE_DIR / path_or_url
+    if not file_path.is_file():
+        return None
+    mime, _ = mimetypes.guess_type(file_path.name)
+    mime = mime or "image/png"
+    b64 = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{b64}"
+
+
+def render_avatar(info: dict, cls_name: str) -> str:
+    uri = load_image_uri(info.get("img", ""))
+    if uri:
+        return f'<div class="{cls_name}"><img src="{uri}" alt="{info["name"]}"></div>'
+    return (
+        f'<div class="{cls_name}" style="background:{info["color"]};">'
+        f'{info["initial"]}</div>'
+    )
+
+
+# -------------------------------------------------
 # 1. 인물 및 일차별 첫 메시지 데이터
 # -------------------------------------------------
 STATE_VERSION = 6
 
+# 여기에 깃허브 images 폴더에 올린 파일명이나 이미지 주소를 적어주세요
 CONTACTS = {
-    "mori": {"name": "보스", "initial": "보", "color": "#8c3b3b"},
-    "dazai": {"name": "자살 희망자", "initial": "자", "color": "#55687a"},
-    "chuuya": {"name": "망할 자식", "initial": "망", "color": "#b0653b"},
-    "akane": {"name": "아카네", "initial": "아", "color": "#6e6a68"},
+    "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.png"},
+    "dazai":  {"name": "자살 희망자", "initial": "자", "color": "#55687a", "img": "images/dazai.png"},
+    "chuuya": {"name": "망할 자식",   "initial": "망", "color": "#b0653b", "img": "images/chuuya.png"},
+    "akane":  {"name": "아카네",     "initial": "아", "color": "#6e6a68", "img": "images/akane.png"},
 }
 
 DAILY_INCOMING = {
@@ -1082,7 +1139,7 @@ if st.session_state.phase == "phone":
                 for cid, info in CONTACTS.items():
                     is_unread = cid not in st.session_state.read_today
                     last_msg = st.session_state.histories[cid][-1]
-                    preview = last_msg["text"]
+                    preview = "(사진)" if last_msg["text"].startswith("img:") else last_msg["text"]
                     if len(preview) > 22:
                         preview = preview[:22] + "..."
                     t_label = last_msg.get("label_time", last_msg.get("time", ""))
@@ -1091,8 +1148,7 @@ if st.session_state.phase == "phone":
                         c_av, c_mid, c_meta = st.columns([0.9, 2.7, 1.0])
                         with c_av:
                             st.markdown(
-                                f'<div class="k-avatar" style="background:{info["color"]};">'
-                                f'{info["initial"]}</div>',
+                                render_avatar(info, "k-avatar"),
                                 unsafe_allow_html=True,
                             )
                         with c_mid:
@@ -1105,131 +1161,3 @@ if st.session_state.phase == "phone":
                         with c_meta:
                             badge_html = (
                                 '<div class="k-badge">1</div>'
-                                if is_unread
-                                else '<div class="k-badge-empty"></div>'
-                            )
-                            st.markdown(
-                                f'<div class="k-meta">'
-                                f'<span class="k-time">{t_label}</span>'
-                                f'{badge_html}'
-                                f'</div>',
-                                unsafe_allow_html=True,
-                            )
-
-            with st.container(key="phone_nav"):
-                if unreplied_count == 0:
-                    btn_txt = "3일차 마감" if st.session_state.day >= 3 else "다음 날로"
-                    st.button(btn_txt, on_click=next_day, key="next_day_btn")
-                else:
-                    replied_n = len(st.session_state.replied_today)
-                    st.button(
-                        f"답장 대기 중 ({replied_n} / {len(CONTACTS)})",
-                        disabled=True,
-                        key="wait_day_btn",
-                    )
-
-        # 2) 아이폰 문자 스타일 1:1 대화방 (직접 입력)
-        elif st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
-            cid = st.session_state.active_chat
-            info = CONTACTS[cid]
-            pending = st.session_state.get("pending_reply")
-            is_typing_now = bool(pending and pending["cid"] == cid)
-
-            with st.container(key="phone_topbar_row"):
-                c_back, c_prof, c_sp = st.columns([1, 2.5, 1])
-                with c_back:
-                    with st.container(key="phone_back"):
-                        back_lbl = f"< {unread_count}" if unread_count > 0 else "< 목록"
-                        st.button(back_lbl, on_click=go_list, key="back_btn")
-                with c_prof:
-                    st.markdown(
-                        f'<div class="ios-center-profile">'
-                        f'<div class="ios-avatar" style="background:{info["color"]};">{info["initial"]}</div>'
-                        f'<div class="ios-name">{info["name"]}</div>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-                with c_sp:
-                    st.markdown("<div></div>", unsafe_allow_html=True)
-
-            # 아이폰 말풍선 채팅창
-            items = []
-            for msg in st.session_state.histories[cid]:
-                safe_txt = html.escape(msg["text"])
-                t_str = msg.get("time", "")
-                if msg["sender"] == "sys":
-                    items.append(f'<div class="ios-sys">{safe_txt}</div>')
-                elif msg["sender"] == "npc":
-                    items.append(
-                        f'<div class="ios-npc-row">'
-                        f'<div class="ios-bubble-npc">{safe_txt}</div>'
-                        f'<span class="ios-msg-time">{t_str}</span>'
-                        f'</div>'
-                    )
-                else:
-                    items.append(
-                        f'<div class="ios-me-row">'
-                        f'<span class="ios-msg-time">{t_str}</span>'
-                        f'<div class="ios-bubble-me">{safe_txt}</div>'
-                        f'</div>'
-                    )
-
-            if is_typing_now:
-                items.append(
-                    '<div class="ios-npc-row">'
-                    '<div class="ios-typing">'
-                    '<span class="ios-dot"></span>'
-                    '<span class="ios-dot"></span>'
-                    '<span class="ios-dot"></span>'
-                    '</div>'
-                    '</div>'
-                )
-            elif st.session_state.last_notice:
-                items.append(f'<div class="ios-sys">{st.session_state.last_notice}</div>')
-
-            chat_html = (
-                '<div class="ios-chat-scroll"><div class="ios-chat-inner">'
-                + "".join(items)
-                + '</div></div>'
-            )
-            st.markdown(chat_html, unsafe_allow_html=True)
-
-            # 하단 직접 입력 폼
-            with st.form(key=f"chat_form_{cid}", clear_on_submit=True):
-                c_inp, c_send = st.columns([4.2, 1.1])
-                with c_inp:
-                    user_msg = st.text_input(
-                        "메시지",
-                        placeholder="입력 중..." if is_typing_now else "문자 메시지 · SMS",
-                        label_visibility="collapsed",
-                        disabled=is_typing_now,
-                        key=f"input_{cid}",
-                    )
-                with c_send:
-                    submitted = st.form_submit_button("전송", disabled=is_typing_now)
-
-            if submitted and user_msg.strip() and not is_typing_now:
-                queue_free_reply(cid, user_msg.strip())
-                st.rerun()
-
-        # 하단 홈 바
-        st.markdown('<div class="ios-homebar"></div>', unsafe_allow_html=True)
-
-    # 2초 텀 후 상대방 답장 출력
-    pending = st.session_state.get("pending_reply")
-    if (
-        st.session_state.phase == "phone"
-        and st.session_state.phone_view == "chat"
-        and pending
-        and pending["cid"] == st.session_state.active_chat
-    ):
-        time.sleep(2)
-        resolve_pending_reply()
-        st.rerun()
-
-# [B] 엔딩 화면
-elif st.session_state.phase == "ending":
-    end = ENDINGS.get(st.session_state.ending_key, ENDINGS["ending_survive"])
-    st.markdown(f"### {end['title']}")
-    formatted = end["text"].replace("\n", "<br>")
-    st.markdown(f'<div class="story-box">{formatted}</div>', unsafe_allow_html=True)
