@@ -551,7 +551,7 @@ hr {
 # -------------------------------------------------
 # 1. 인물 및 일차별 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 5
+STATE_VERSION = 6
 
 CONTACTS = {
     "mori": {"name": "모리 오가이", "initial": "모", "color": "#8c3b3b"},
@@ -905,6 +905,7 @@ def init_game():
     st.session_state.day = 1
     st.session_state.hp = 85
     st.session_state.suspicion = 0
+    st.session_state.read_today = []
     st.session_state.replied_today = []
     st.session_state.msg_counts = {cid: 0 for cid in CONTACTS}
     st.session_state.pending_reply = None
@@ -939,6 +940,8 @@ def resolve_pending_reply():
     st.session_state.hp = clamp(st.session_state.hp + hp_d)
     st.session_state.suspicion = clamp(st.session_state.suspicion + sus_d)
 
+    if cid not in st.session_state.read_today:
+        st.session_state.read_today.append(cid)
     if first_today:
         st.session_state.replied_today.append(cid)
 
@@ -959,6 +962,8 @@ def resolve_pending_reply():
 
 def open_chat(cid: str):
     resolve_pending_reply()
+    if cid not in st.session_state.read_today:
+        st.session_state.read_today.append(cid)
     st.session_state.active_chat = cid
     st.session_state.phone_view = "chat"
     st.session_state.last_notice = ""
@@ -982,6 +987,8 @@ def queue_free_reply(cid: str, user_text: str):
     st.session_state.histories[cid].append(
         {"sender": "me", "text": user_text, "time": t_me}
     )
+    if cid not in st.session_state.read_today:
+        st.session_state.read_today.append(cid)
     st.session_state.last_notice = ""
     st.session_state.pending_reply = {
         "cid": cid,
@@ -999,6 +1006,7 @@ def next_day():
 
     st.session_state.day += 1
     st.session_state.hp = clamp(st.session_state.hp - 8)
+    st.session_state.read_today = []
     st.session_state.replied_today = []
     st.session_state.msg_counts = {cid: 0 for cid in CONTACTS}
     st.session_state.last_notice = ""
@@ -1019,6 +1027,7 @@ REQUIRED_KEYS = (
     "day",
     "hp",
     "suspicion",
+    "read_today",
     "replied_today",
     "msg_counts",
     "pending_reply",
@@ -1038,7 +1047,8 @@ if (
 # -------------------------------------------------
 # 4. 메인 화면 (핸드폰 단독)
 # -------------------------------------------------
-unread_count = len(CONTACTS) - len(st.session_state.replied_today)
+unread_count = len(CONTACTS) - len(st.session_state.read_today)
+unreplied_count = len(CONTACTS) - len(st.session_state.replied_today)
 
 st.markdown(
     '<p class="opening-line">눈앞에 핸드폰이 있다......</p>',
@@ -1070,7 +1080,7 @@ if st.session_state.phase == "phone":
 
             with st.container(key="phone_list"):
                 for cid, info in CONTACTS.items():
-                    is_unread = cid not in st.session_state.replied_today
+                    is_unread = cid not in st.session_state.read_today
                     last_msg = st.session_state.histories[cid][-1]
                     preview = last_msg["text"]
                     if len(preview) > 22:
@@ -1107,11 +1117,16 @@ if st.session_state.phase == "phone":
                             )
 
             with st.container(key="phone_nav"):
-                if unread_count == 0:
+                if unreplied_count == 0:
                     btn_txt = "3일차 마감" if st.session_state.day >= 3 else "다음 날로"
                     st.button(btn_txt, on_click=next_day, key="next_day_btn")
                 else:
-                    st.button(f"안 읽음 {unread_count}", disabled=True, key="wait_day_btn")
+                    replied_n = len(st.session_state.replied_today)
+                    st.button(
+                        f"답장 대기 중 ({replied_n} / {len(CONTACTS)})",
+                        disabled=True,
+                        key="wait_day_btn",
+                    )
 
         # 2) 아이폰 문자 스타일 1:1 대화방 (직접 입력)
         elif st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
