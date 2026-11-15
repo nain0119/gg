@@ -1,197 +1,329 @@
+from pathlib import Path
 
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>문호 스트레이독스 RPG</title>
-<style>
-* { box-sizing: border-box; }
+app = r'''import json
+import random
+import streamlit as st
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: #15171c;
-  color: #e8e5e0;
-  font-family: "Noto Serif KR", serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
+st.set_page_config(
+    page_title="BLACK HOUSE — 기시 유스케",
+    page_icon="🌑",
+    layout="wide",
+)
+
+# BLACK HOUSE: Streamlit-native prototype
+# Save this file as index.py (or streamlit_app.py) in the repository root.
+
+INITIAL_STATE = {
+    "day": 1,
+    "slot": 0,
+    "hp": 65,
+    "mind": 80,
+    "ability": 90,
+    "reputation": 25,
+    "work": 15,
+    "survival": 100,
+    "money": 3000,
+    "relations": {
+        "모리 오가이": -85,
+        "다자이 오사무": -35,
+        "나카하라 츄야": -70,
+        "아카네": 25,
+        "쇼헤이": 25,
+    },
+    "flags": {"dazai_talks": 0, "mori_deal": False},
+    "log": ["DAY 01 — 요코하마의 아침이 시작되었다."],
+    "ending": None,
 }
 
-.game {
-  width: 100%;
-  max-width: 680px;
-  padding: 38px;
-  background: #20232a;
-  border: 1px solid #45434a;
-  border-radius: 12px;
+STAT_NAMES = {
+    "hp": "체력",
+    "mind": "정신력",
+    "ability": "이능력 숙련도",
+    "reputation": "평판",
+    "work": "업무 성실도",
+    "survival": "생존 의지",
 }
+TIME_NAMES = ["09:00 AM", "12:00 PM", "03:00 PM", "06:00 PM", "09:00 PM"]
+PHASES = ["MORNING", "NOON", "AFTERNOON", "EVENING", "NIGHT"]
 
-.subtitle {
-  color: #aaa3a0;
-  letter-spacing: 4px;
-  font-size: 11px;
-}
 
-h1 {
-  font-size: 30px;
-  margin: 14px 0;
-}
+def init_game():
+    st.session_state.game = json.loads(json.dumps(INITIAL_STATE))
 
-.line {
-  height: 1px;
-  background: #514d50;
-  margin: 24px 0;
-}
 
-#story {
-  white-space: pre-line;
-  line-height: 2;
-  min-height: 130px;
-}
+def add_log(message):
+    g = st.session_state.game
+    g["log"].insert(0, f'DAY {g["day"]:02d} — {message}')
+    g["log"] = g["log"][:30]
 
-button {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  margin-top: 12px;
-  background: #30343e;
-  color: #eee;
-  border: 1px solid #595b63;
-  border-radius: 5px;
-  cursor: pointer;
-  text-align: left;
-}
 
-button:hover {
-  background: #48434a;
-}
+def change(stat, amount):
+    g = st.session_state.game
+    g[stat] = max(0, min(100, g[stat] + amount))
 
-#choices { margin-top: 24px; }
 
-.small {
-  font-size: 11px;
-  color: #999;
-  text-align: center;
-  margin-top: 28px;
-}
-</style>
-</head>
+def change_relation(name, amount):
+    g = st.session_state.game
+    g["relations"][name] = max(-100, min(100, g["relations"][name] + amount))
 
-<body>
-<main class="game">
-  <div class="subtitle">BUNGO STRAY DOGS · ORIGINAL RPG</div>
-  <h1>문호 스트레이독스</h1>
-  <div class="line"></div>
 
-  <div id="story">
-    이야기가 시작된다.
+def finish_ending(title, text):
+    st.session_state.game["ending"] = {"title": title, "text": text}
 
-    당신의 선택은 이 이야기의 결말을 바꿀 것이다.
-  </div>
 
-  <div id="choices">
-    <button onclick="startGame()">이야기 시작하기</button>
-  </div>
+def check_ending():
+    g = st.session_state.game
+    if g["hp"] <= 0:
+        finish_ending(
+            "ENDING 01 — 몸이 먼저 한계를 맞았다",
+            "살아남겠다는 의지만으로 모든 것을 해결할 수는 없었다. "
+            "유스케는 당분간 모든 일정을 내려놓게 되었다.",
+        )
+    elif g["flags"]["mori_deal"] and g["reputation"] >= 75 and g["day"] >= 5:
+        finish_ending(
+            "ENDING 02 — 쓸모 있는 말단",
+            "승진을 바라지 않았던 유스케에게 모리는 새로운 역할을 제안했다. "
+            "그 제안이 선물인지 족쇄인지는 아직 알 수 없다.",
+        )
+    elif g["flags"]["dazai_talks"] >= 3 and g["day"] >= 6:
+        finish_ending(
+            "ENDING 03 — 오래된 악우",
+            "몇 번의 대화 끝에 두 사람은 예전처럼 서로를 이해하지 못한 채 헤어졌다. "
+            "달라진 것은 없지만, 그것으로 충분했다.",
+        )
+    elif g["day"] >= 10:
+        finish_ending(
+            "ENDING 04 — 내일도 살아간다",
+            "특별한 결론은 없었다. 유스케는 여전히 포트 마피아의 말단 조직원이고, "
+            "내일도 눈을 뜰 것이다. 적어도 지금은.",
+        )
 
-  <div class="small">
-    ORIGINAL CHARACTER RPG
-  </div>
-</main>
 
-<script>
-let affection = 0;
-let eventNumber = 0;
+def advance():
+    g = st.session_state.game
+    g["slot"] += 1
+    if g["slot"] >= 5:
+        g["slot"] = 0
+        g["day"] += 1
+        change("hp", -5)
+        change("mind", -3)
+        add_log("하루가 끝났다. 피로가 쌓였다.")
+    check_ending()
 
-const story = document.getElementById("story");
-const choices = document.getElementById("choices");
 
-function showEvent(text, options) {
-  story.textContent = text;
-  choices.innerHTML = "";
+def do_action(label, effect, log_message):
+    effect()
+    add_log(log_message)
+    advance()
+    st.rerun()
 
-  options.forEach(option => {
-    const button = document.createElement("button");
-    button.textContent = option.text;
 
-    button.onclick = () => {
-      affection += option.point;
-      eventNumber++;
-      option.action();
-    };
+def event_choices(event):
+    for label, effect, message in event["choices"]:
+        if st.button(label, key=f'{st.session_state.game["day"]}_{st.session_state.game["slot"]}_{label}', use_container_width=True):
+            do_action(label, effect, message)
 
-    choices.appendChild(button);
-  });
-}
 
-function startGame() {
-  affection = 0;
-  eventNumber = 0;
+EVENTS = [
+    {
+        "title": "파쇄기 앞의 서류",
+        "location": "PORT MAFIA OFFICE",
+        "text": "책상 위에 결재 서류가 놓여 있다. 읽기도 전에 파쇄기가 눈에 들어온다.\\n\\n누가 봐도 귀찮은 일이다.",
+        "choices": [
+            ("서류를 처리한다", lambda: (change("work", 8), change("mind", -5), change("reputation", 2)), "드물게 서류를 처리했다."),
+            ("적당히 훑어보고 미룬다", lambda: (change("work", -2), change("mind", 2)), "서류를 내일로 미뤘다."),
+            ("파쇄기에 넣는다", lambda: (change("work", -8), change("reputation", -4)), "서류가 파쇄되었다."),
+        ],
+    },
+    {
+        "title": "오래된 친구",
+        "location": "HEADQUARTERS HALLWAY",
+        "text": "복도 모퉁이에서 다자이와 마주쳤다. 그는 먼저 말을 걸어온다.\\n\\n“어라, 유스케. 아직도 여기 있었구나?”",
+        "choices": [
+            ("“너야말로 한가한가 봐.”", lambda: (change_relation("다자이 오사무", 2), st.session_state.game["flags"].update(dazai_talks=st.session_state.game["flags"]["dazai_talks"] + 1), change("mind", 2)), "다자이와 말씨름을 했다."),
+            ("대꾸하지 않고 지나간다", lambda: change_relation("다자이 오사무", -1), "다자이를 지나쳤다."),
+            ("츄야를 놀릴 계획을 제안한다", lambda: (change_relation("다자이 오사무", 4), st.session_state.game["flags"].update(dazai_talks=st.session_state.game["flags"]["dazai_talks"] + 1)), "다자이와 잠깐 손을 잡았다."),
+        ],
+    },
+    {
+        "title": "불쾌한 모자",
+        "location": "HEADQUARTERS HALLWAY",
+        "text": "복도 끝에서 츄야가 걸어온다. 다자이와 함께 있던 흔적을 본 모양인지 표정이 썩 좋지 않다.\\n\\n“야, 너. 또 무슨 수작이야?”",
+        "choices": [
+            ("“별일 없는데? 예민하네.”", lambda: (change_relation("나카하라 츄야", -3), change("mind", 2)), "츄야의 신경을 긁었다."),
+            ("못 들은 척 지나간다", lambda: change_relation("나카하라 츄야", -1), "츄야를 무시했다."),
+            ("다자이에게 떠넘긴다", lambda: (change_relation("나카하라 츄야", -2), change_relation("다자이 오사무", 1)), "다자이를 끌어들였다."),
+        ],
+    },
+    {
+        "title": "보스의 호출",
+        "location": "MORI'S OFFICE",
+        "text": "모리의 집무실로 오라는 연락이 왔다. 이유는 적혀 있지 않다.\\n\\n모리는 늘 그렇듯 무슨 생각인지 알기 어렵다.",
+        "choices": [
+            ("일단 찾아간다", lambda: (change_relation("모리 오가이", -1), change("reputation", 2), st.session_state.game["flags"].update(mori_deal=True)), "모리의 집무실에 다녀왔다."),
+            ("몸이 좋지 않다고 거절한다", lambda: (change("hp", 4), change_relation("모리 오가이", -2)), "모리의 호출을 거절했다."),
+            ("아카네에게 먼저 물어본다", lambda: (change_relation("아카네", 2), change("mind", 2)), "아카네에게 상황을 물었다."),
+        ],
+    },
+    {
+        "title": "예상 밖의 휴식",
+        "location": "PORT MAFIA LOUNGE",
+        "text": "오늘은 드물게 급한 일이 없다. 창밖으로 요코하마의 거리가 보인다.\\n\\n이대로 잠깐 쉬어도 아무도 모를 것 같다.",
+        "choices": [
+            ("조용히 쉰다", lambda: (change("hp", 8), change("mind", 7)), "잠시 휴식을 취했다."),
+            ("쇼헤이를 찾아간다", lambda: (change_relation("쇼헤이", 3), change("mind", 3)), "쇼헤이와 시간을 보냈다."),
+            ("이능력 감각을 점검한다", lambda: (change("ability", 2), change("mind", -2)), "이능력을 점검했다."),
+        ],
+    },
+]
 
-  showEvent(
-    "요코하마의 어느 평범한 하루.\n\n당신은 익숙한 거리에서 낯선 인물을 발견했다.",
-    [
-      {
-        text: "먼저 말을 건다.",
-        point: 2,
-        action: nextEvent
-      },
-      {
-        text: "조금 더 지켜본다.",
-        point: 1,
-        action: nextEvent
-      },
-      {
-        text: "그대로 지나친다.",
-        point: -1,
-        action: nextEvent
-      }
-    ]
-  );
-}
 
-function nextEvent() {
-  showEvent(
-    "상대는 당신을 바라보았다.\n\n\"무슨 일이야?\"",
-    [
-      {
-        text: "솔직하게 대답한다.",
-        point: 2,
-        action: ending
-      },
-      {
-        text: "적당히 둘러댄다.",
-        point: 0,
-        action: ending
-      },
-      {
-        text: "대답하지 않는다.",
-        point: -1,
-        action: ending
-      }
-    ]
-  );
-}
+def show_morning():
+    g = st.session_state.game
+    if g["day"] == 1 and g["slot"] == 0 and not g["flags"].get("intro_seen"):
+        st.session_state.game["flags"]["intro_seen"] = True
+        st.subheader("오늘도 살아 있네.")
+        st.write(
+            "눈을 뜨자 휴대전화가 울렸다. 발신자는 모리 씨다. 아침부터 기분이 썩 좋지 않다.\\n\\n"
+            "책상 위에는 어제 처리하지 않은 서류가 쌓여 있다. 오늘도 평범하고 귀찮은 하루가 될 것 같다."
+        )
+        st.caption("PORT MAFIA HEADQUARTERS")
+        if st.button("모리의 전화를 받는다", use_container_width=True):
+            change_relation("모리 오가이", -2)
+            add_log("모리의 호출을 받았다.")
+            st.session_state.game["flags"]["mori_call"] = True
+            st.session_state.game["slot"] = 1
+            st.rerun()
+        if st.button("무시하고 다시 눕는다", use_container_width=True):
+            change("hp", 3)
+            change("work", -2)
+            add_log("모리의 전화를 무시했다.")
+            advance()
+            st.rerun()
+        if st.button("문자부터 확인한다", use_container_width=True):
+            change("mind", 2)
+            add_log("호출 내용을 문자로 확인했다.")
+            advance()
+            st.rerun()
+        return
 
-function ending() {
-  story.textContent =
-    "이야기의 끝에 도달했다.\n\n" +
-    (affection >= 3
-      ? "ENDING 01 · 새로운 인연"
-      : affection >= 0
-      ? "ENDING 02 · 평범한 만남"
-      : "ENDING 03 · 엇갈린 시선");
+    if g["slot"] == 0:
+        st.subheader("새로운 아침")
+        st.write("어제의 피로가 완전히 가시지는 않았다. 오늘 하루를 어떻게 보낼까?")
+        st.caption("YOKOHAMA")
+        if st.button("포트 마피아 본부로 출근한다", use_container_width=True):
+            do_action("출근", lambda: (change("work", 5), change("reputation", 1)), "본부에 출근했다.")
+        if st.button("병원에서 상태를 확인한다", use_container_width=True):
+            do_action("진료", lambda: (change("hp", 12), setattr(st.session_state.game, "money", 0)), "진료를 받고 컨디션을 조금 회복했다.")
+        if st.button("밖으로 나가 산책한다", use_container_width=True):
+            do_action("산책", lambda: change("mind", 8), "요코하마 거리를 걸었다.")
+        if st.button("아카네에게 연락한다", use_container_width=True):
+            do_action("연락", lambda: (change_relation("아카네", 3), change("mind", 4)), "아카네와 짧게 연락했다.")
+        return
 
-  choices.innerHTML = "";
+    event = random.choice(EVENTS)
+    # Keep the selected event stable during Streamlit reruns.
+    key = f'event_{g["day"]}_{g["slot"]}'
+    if key not in st.session_state:
+        st.session_state[key] = event
+    event = st.session_state[key]
+    st.subheader(event["title"])
+    st.write(event["text"])
+    st.caption(event["location"])
+    event_choices(event)
 
-  const button = document.createElement("button");
-  button.textContent = "다시 시작하기";
-  button.onclick = startGame;
 
-  choices.appendChild(button);
-}
-</script>
-</body>
-</html>
+if "game" not in st.session_state:
+    init_game()
+
+g = st.session_state.game
+
+st.markdown(
+    """
+    <style>
+    .stApp {background: radial-gradient(circle at 15% 0%, #292332 0, transparent 34%), #111118;}
+    h1,h2,h3 {color:#e5d9eb !important;}
+    div[data-testid="stMetric"] {background:#22212c;padding:12px;border:1px solid #393543;border-radius:10px;}
+    .block-container {max-width:1200px;padding-top:2rem;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown("<p style='text-align:center;letter-spacing:.28em;color:#aaa3b2;font-size:11px'>BUNGO STRAY DOGS · CHARACTER LIFE RPG</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;letter-spacing:.12em'>BLACK HOUSE</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:#aaa3b2;letter-spacing:.16em;font-size:12px'>貴志 祐介 — PORT MAFIA / YOKOHAMA</p>", unsafe_allow_html=True)
+st.divider()
+
+left, right = st.columns([1, 2.15], gap="large")
+
+with left:
+    st.markdown("## 貴志 祐介")
+    st.caption("YUSUKE KISHI · 22 · PORT MAFIA")
+    st.markdown("### STATUS")
+    st.write(f'**DAY {g["day"]:02d}** · {TIME_NAMES[min(g["slot"], 4)]}')
+    st.write(f'상태: {"매우 좋지 않음" if g["hp"] < 30 else "불안정"}')
+    st.write(f'소지금: ¥ {g["money"]:,}')
+    st.markdown("### PARAMETERS")
+    for key, label in STAT_NAMES.items():
+        st.write(f"**{label}** · {g[key]}/100")
+        st.progress(g[key] / 100)
+    st.markdown("### RELATIONSHIP")
+    for name, value in g["relations"].items():
+        st.write(f"{name}　**{value:+d}**")
+
+with right:
+    st.markdown(f"**PRESENT · YOKOHAMA**　　`{PHASES[min(g['slot'], 4)]}`")
+    st.markdown(
+        """
+        <div style="background:linear-gradient(120deg,#252333,#3a3040 48%,#161720);
+        border:1px solid #393543;border-radius:12px;padding:26px 20px;margin:10px 0 18px">
+        <div style="color:#d7c9df;letter-spacing:.2em;font-size:11px">PORT MAFIA · YOKOHAMA</div>
+        <div style="color:#e5d9eb;font-size:25px;margin-top:8px">오늘도 살아 있네.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    if g["ending"]:
+        st.error(g["ending"]["title"])
+        st.write(g["ending"]["text"])
+        if st.button("새로운 기록 시작하기", use_container_width=True):
+            init_game()
+            st.rerun()
+    else:
+        show_morning()
+
+    st.divider()
+    st.markdown("### QUICK ACTIONS")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        save_data = json.dumps(g, ensure_ascii=False, indent=2)
+        st.download_button("저장 파일 받기", save_data, file_name="black_house_save.json", mime="application/json", use_container_width=True)
+    with c2:
+        uploaded = st.file_uploader("불러오기", type=["json"], label_visibility="collapsed")
+        if uploaded is not None:
+            try:
+                loaded = json.load(uploaded)
+                st.session_state.game = loaded
+                st.success("저장 데이터를 불러왔어.")
+                st.rerun()
+            except (json.JSONDecodeError, KeyError, TypeError):
+                st.error("저장 파일을 읽지 못했어.")
+    with c3:
+        if st.button("새 게임", use_container_width=True):
+            init_game()
+            st.rerun()
+
+st.divider()
+st.markdown("### CHRONICLE / 기록")
+for line in g["log"]:
+    st.caption(line)
+
+st.caption("UNOFFICIAL FAN-MADE GAME · NOT AFFILIATED WITH THE ORIGINAL WORK")
+'''
+# Fix an accidental invalid setattr in the hospital action; update money directly.
+app = app.replace('lambda: (change("hp", 12), setattr(st.session_state.game, "money", 0))',
+                  'lambda: (change("hp", 12), st.session_state.game.update(money=max(0, st.session_state.game["money"] - 500)))')
+out = Path("/mnt/data/index.py")
+out.write_text(app, encoding="utf-8")
+print(f"Created {out} ({out.stat().st_size:,} bytes)")
