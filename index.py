@@ -554,9 +554,9 @@ hr {
 STATE_VERSION = 6
 
 CONTACTS = {
-    "mori": {"name": "모리 오가이", "initial": "모", "color": "#8c3b3b"},
-    "dazai": {"name": "다자이 오사무", "initial": "다", "color": "#55687a"},
-    "chuuya": {"name": "나카하라 츄야", "initial": "츄", "color": "#b0653b"},
+    "mori": {"name": "보스", "initial": "보", "color": "#8c3b3b"},
+    "dazai": {"name": "자살 희망자", "initial": "자", "color": "#55687a"},
+    "chuuya": {"name": "망할 자식", "initial": "망", "color": "#b0653b"},
     "akane": {"name": "아카네", "initial": "아", "color": "#6e6a68"},
 }
 
@@ -700,7 +700,7 @@ def judge_and_reply(cid: str, text: str) -> tuple[list[str], int, int]:
     t = text.strip()
     polite = is_polite_korean(t)
 
-    # 1) 모리 오가이 판정
+    # 1) 보스 (모리 오가이) 판정
     if cid == "mori":
         if polite:
             return (
@@ -741,7 +741,7 @@ def judge_and_reply(cid: str, text: str) -> tuple[list[str], int, int]:
             -4,
         )
 
-    # 2) 다자이 오사무 판정
+    # 2) 자살 희망자 (다자이 오사무) 판정
     if cid == "dazai":
         if polite:
             return (
@@ -788,7 +788,7 @@ def judge_and_reply(cid: str, text: str) -> tuple[list[str], int, int]:
             -4,
         )
 
-    # 3) 나카하라 츄야 판정
+    # 3) 망할 자식 (나카하라 츄야) 판정
     if cid == "chuuya":
         if polite or has_any(t, ["잘생", "멋", "존경", "팬", "사랑", "좋아"]):
             return (
