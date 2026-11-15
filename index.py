@@ -1161,3 +1161,140 @@ if st.session_state.phase == "phone":
                         with c_meta:
                             badge_html = (
                                 '<div class="k-badge">1</div>'
+                                if is_unread
+                                else '<div class="k-badge-empty"></div>'
+                            )
+                            st.markdown(
+                                f'<div class="k-meta">'
+                                f'<span class="k-time">{t_label}</span>'
+                                f'{badge_html}'
+                                f'</div>',
+                                unsafe_allow_html=True,
+                            )
+
+            with st.container(key="phone_nav"):
+                if unreplied_count == 0:
+                    btn_txt = "3일차 마감" if st.session_state.day >= 3 else "다음 날로"
+                    st.button(btn_txt, on_click=next_day, key="next_day_btn")
+                else:
+                    replied_n = len(st.session_state.replied_today)
+                    st.button(
+                        f"답장 대기 중 ({replied_n} / {len(CONTACTS)})",
+                        disabled=True,
+                        key="wait_day_btn",
+                    )
+
+        # 2) 아이폰 문자 스타일 1:1 대화방 (직접 입력)
+        elif st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
+            cid = st.session_state.active_chat
+            info = CONTACTS[cid]
+            pending = st.session_state.get("pending_reply")
+            is_typing_now = bool(pending and pending["cid"] == cid)
+
+            with st.container(key="phone_topbar_row"):
+                c_back, c_prof, c_sp = st.columns([1, 2.5, 1])
+                with c_back:
+                    with st.container(key="phone_back"):
+                        back_lbl = f"< {unread_count}" if unread_count > 0 else "< 목록"
+                        st.button(back_lbl, on_click=go_list, key="back_btn")
+                with c_prof:
+                    st.markdown(
+                        f'<div class="ios-center-profile">'
+                        f'{render_avatar(info, "ios-avatar")}'
+                        f'<div class="ios-name">{info["name"]}</div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+                with c_sp:
+                    st.markdown("<div></div>", unsafe_allow_html=True)
+
+            # 아이폰 말풍선 채팅창
+            items = []
+            for msg in st.session_state.histories[cid]:
+                raw_txt = msg["text"]
+                t_str = msg.get("time", "")
+                if msg["sender"] == "sys":
+                    items.append(f'<div class="ios-sys">{html.escape(raw_txt)}</div>')
+                elif msg["sender"] == "npc":
+                    if raw_txt.startswith("img:"):
+                        uri = load_image_uri(raw_txt[4:].strip())
+                        bubble = (
+                            f'<div class="ios-img-bubble"><img src="{uri}"></div>'
+                            if uri
+                            else '<div class="ios-bubble-npc">(사진)</div>'
+                        )
+                    else:
+                        bubble = f'<div class="ios-bubble-npc">{html.escape(raw_txt)}</div>'
+                    items.append(
+                        f'<div class="ios-npc-row">'
+                        f'{bubble}'
+                        f'<span class="ios-msg-time">{t_str}</span>'
+                        f'</div>'
+                    )
+                else:
+                    items.append(
+                        f'<div class="ios-me-row">'
+                        f'<span class="ios-msg-time">{t_str}</span>'
+                        f'<div class="ios-bubble-me">{html.escape(raw_txt)}</div>'
+                        f'</div>'
+                    )
+
+            if is_typing_now:
+                items.append(
+                    '<div class="ios-npc-row">'
+                    '<div class="ios-typing">'
+                    '<span class="ios-dot"></span>'
+                    '<span class="ios-dot"></span>'
+                    '<span class="ios-dot"></span>'
+                    '</div>'
+                    '</div>'
+                )
+            elif st.session_state.last_notice:
+                items.append(f'<div class="ios-sys">{st.session_state.last_notice}</div>')
+
+            chat_html = (
+                '<div class="ios-chat-scroll"><div class="ios-chat-inner">'
+                + "".join(items)
+                + '</div></div>'
+            )
+            st.markdown(chat_html, unsafe_allow_html=True)
+
+            # 하단 직접 입력 폼
+            with st.form(key=f"chat_form_{cid}", clear_on_submit=True):
+                c_inp, c_send = st.columns([4.2, 1.1])
+                with c_inp:
+                    user_msg = st.text_input(
+                        "메시지",
+                        placeholder="입력 중..." if is_typing_now else "문자 메시지 · SMS",
+                        label_visibility="collapsed",
+                        disabled=is_typing_now,
+                        key=f"input_{cid}",
+                    )
+                with c_send:
+                    submitted = st.form_submit_button("전송", disabled=is_typing_now)
+
+            if submitted and user_msg.strip() and not is_typing_now:
+                queue_free_reply(cid, user_msg.strip())
+                st.rerun()
+
+        # 하단 홈 바
+        st.markdown('<div class="ios-homebar"></div>', unsafe_allow_html=True)
+
+    # 2초 텀 후 상대방 답장 출력
+    pending = st.session_state.get("pending_reply")
+    if (
+        st.session_state.phase == "phone"
+        and st.session_state.phone_view == "chat"
+        and pending
+        and pending["cid"] == st.session_state.active_chat
+    ):
+        time.sleep(2)
+        resolve_pending_reply()
+        st.rerun()
+
+# [B] 엔딩 화면
+elif st.session_state.phase == "ending":
+    end = ENDINGS.get(st.session_state.ending_key, ENDINGS["ending_survive"])
+    st.markdown(f"### {end['title']}")
+    formatted = end["text"].replace("\n", "<br>")
+    st.markdown(f'<div class="story-box">{formatted}</div>', unsafe_allow_html=True)
