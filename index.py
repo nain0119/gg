@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 디자인 테마 + 진짜 아이폰/카톡 스타일 CSS
+# 디자인 테마 + 확대된 아이폰/카톡 스타일 CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
@@ -30,10 +30,14 @@ st.markdown("""
     font-family: 'Noto Sans KR', sans-serif;
 }
 
+header[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
 .block-container {
-    max-width: 820px;
-    padding-top: 1.8rem;
-    padding-bottom: 3.5rem;
+    max-width: 900px;
+    padding-top: 3.6rem;
+    padding-bottom: 4rem;
 }
 
 h1, h2, h3 {
@@ -50,27 +54,49 @@ p, span, label {
     border-right: 1px solid var(--line);
 }
 
+/* 기본 버튼 (사이드바, 엔딩 화면용) */
+div.stButton > button {
+    width: 100%;
+    background: var(--panel) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.94rem;
+    transition: 0.15s;
+}
+
+div.stButton > button:hover {
+    background: #302522 !important;
+    border-color: var(--accent) !important;
+    color: #ffffff !important;
+}
+
+div.stButton > button p {
+    color: var(--text) !important;
+}
+
 .opening-line {
     text-align: center;
-    color: #b8b0a4 !important;
+    color: #c9c0b4 !important;
     font-family: 'Gowun Batang', serif;
-    font-size: 1rem;
+    font-size: 1.12rem;
     letter-spacing: 0.5px;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
 
-/* 스마트폰 외형 (검은 베젤 + 밝은 흰색 액정) */
+/* 스마트폰 외형 (크기 확대: 470px) */
 .st-key-phone_shell {
-    max-width: 390px !important;
+    max-width: 470px !important;
     margin: 0 auto !important;
     background: #ffffff !important;
-    border: 9px solid #1f1d1c !important;
-    border-radius: 40px !important;
-    padding: 10px 14px 12px 14px !important;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 0 1px #49413b !important;
+    border: 10px solid #1f1d1c !important;
+    border-radius: 44px !important;
+    padding: 14px 18px 14px 18px !important;
+    box-shadow: 0 26px 65px rgba(0, 0, 0, 0.85), 0 0 0 1px #49413b !important;
 }
 
-/* 폰 내부 기본 글자색은 전부 검은색으로 강제 오버라이드 */
+/* 폰 내부 기본 글자색 검은색 유지 */
 .st-key-phone_shell p,
 .st-key-phone_shell span,
 .st-key-phone_shell label,
@@ -83,15 +109,15 @@ p, span, label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2px 10px 8px 10px;
-    font-size: 0.78rem;
+    padding: 2px 12px 10px 12px;
+    font-size: 0.86rem;
     font-weight: 700;
     color: #111111 !important;
 }
 
 .ios-island {
-    width: 84px;
-    height: 20px;
+    width: 98px;
+    height: 24px;
     background: #111111;
     border-radius: 99px;
 }
@@ -100,10 +126,10 @@ p, span, label {
     display: inline-block;
     background: #ffd60a;
     color: #111111 !important;
-    font-size: 0.68rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 5px;
+    padding: 2px 7px;
+    border-radius: 6px;
 }
 
 /* 목록 상단 헤더 */
@@ -111,36 +137,36 @@ p, span, label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 4px 10px 4px;
+    padding: 8px 4px 12px 4px;
     border-bottom: 1px solid #ececef;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .kakao-title {
-    font-size: 1.2rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: #111111 !important;
 }
 
 .kakao-day {
-    font-size: 0.78rem;
+    font-size: 0.86rem;
     color: #8e8e93 !important;
 }
 
-/* 채팅 목록 행 레이아웃 유지 (모바일에서도 가로 고정) */
+/* 채팅 목록 행 레이아웃 유지 */
 .st-key-phone_list [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 8px !important;
-    padding: 6px 2px !important;
+    gap: 10px !important;
+    padding: 8px 2px !important;
     border-bottom: 1px solid #f2f2f5;
 }
 
 .st-key-phone_list [data-testid="stHorizontalBlock"] > div:nth-child(1) {
-    flex: 0 0 48px !important;
-    width: 48px !important;
-    min-width: 48px !important;
+    flex: 0 0 56px !important;
+    width: 56px !important;
+    min-width: 56px !important;
 }
 
 .st-key-phone_list [data-testid="stHorizontalBlock"] > div:nth-child(2) {
@@ -149,21 +175,21 @@ p, span, label {
 }
 
 .st-key-phone_list [data-testid="stHorizontalBlock"] > div:nth-child(3) {
-    flex: 0 0 60px !important;
-    width: 60px !important;
-    min-width: 60px !important;
+    flex: 0 0 68px !important;
+    width: 68px !important;
+    min-width: 68px !important;
 }
 
 /* 카톡 스퀘어클 아바타 */
 .k-avatar {
-    width: 46px;
-    height: 46px;
-    border-radius: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.15rem;
     color: #ffffff !important;
 }
 
@@ -172,11 +198,11 @@ p, span, label {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 5px;
+    gap: 6px;
 }
 
 .k-time {
-    font-size: 0.7rem;
+    font-size: 0.76rem;
     color: #8e8e93 !important;
     white-space: nowrap;
 }
@@ -185,18 +211,18 @@ p, span, label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
     border-radius: 99px;
     background: #ff5722;
     color: #ffffff !important;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     font-weight: 700;
 }
 
 .k-badge-empty {
-    height: 20px;
+    height: 22px;
 }
 
 /* 카톡 목록 버튼 투명화 */
@@ -205,9 +231,9 @@ p, span, label {
     border: none !important;
     box-shadow: none !important;
     text-align: left !important;
-    padding: 2px 4px !important;
-    min-height: 2.6rem !important;
-    border-radius: 8px !important;
+    padding: 4px 6px !important;
+    min-height: 3rem !important;
+    border-radius: 10px !important;
 }
 
 .st-key-phone_list div.stButton > button:hover {
@@ -216,31 +242,31 @@ p, span, label {
 
 .st-key-phone_list div.stButton > button p {
     color: #6e6e73 !important;
-    font-size: 0.8rem !important;
-    line-height: 1.38 !important;
+    font-size: 0.87rem !important;
+    line-height: 1.45 !important;
     margin: 0 !important;
 }
 
 .st-key-phone_list div.stButton > button strong {
     color: #111111 !important;
-    font-size: 0.94rem !important;
+    font-size: 1.02rem !important;
 }
 
-/* 채팅방 상단 바 (아이폰 < 203 + 중앙 프로필) */
+/* 채팅방 상단 바 */
 .st-key-phone_topbar_row [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 4px !important;
-    padding-bottom: 8px;
+    gap: 6px !important;
+    padding-bottom: 10px;
     border-bottom: 1px solid #ececef;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .st-key-phone_topbar_row [data-testid="stHorizontalBlock"] > div:nth-child(1) {
-    flex: 0 0 74px !important;
-    width: 74px !important;
-    min-width: 74px !important;
+    flex: 0 0 82px !important;
+    width: 82px !important;
+    min-width: 82px !important;
 }
 
 .st-key-phone_topbar_row [data-testid="stHorizontalBlock"] > div:nth-child(2) {
@@ -249,23 +275,23 @@ p, span, label {
 }
 
 .st-key-phone_topbar_row [data-testid="stHorizontalBlock"] > div:nth-child(3) {
-    flex: 0 0 74px !important;
-    width: 74px !important;
-    min-width: 74px !important;
+    flex: 0 0 82px !important;
+    width: 82px !important;
+    min-width: 82px !important;
 }
 
 .st-key-phone_back div.stButton > button {
     background: #f2f2f7 !important;
     border: 1px solid #e5e5ea !important;
     border-radius: 99px !important;
-    padding: 4px 10px !important;
-    min-height: 2rem !important;
+    padding: 5px 12px !important;
+    min-height: 2.2rem !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
 }
 
 .st-key-phone_back div.stButton > button p {
     color: #111111 !important;
-    font-size: 0.82rem !important;
+    font-size: 0.88rem !important;
     font-weight: 700 !important;
 }
 
@@ -274,40 +300,40 @@ p, span, label {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
 }
 
 .ios-avatar {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 99px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #ffffff !important;
 }
 
 .ios-name {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #111111 !important;
 }
 
-/* 아이폰 SMS 채팅창 (흰 배경, 자동 하단 스크롤) */
+/* 아이폰 SMS 채팅창 (크기 확대: 460px) */
 .ios-chat-scroll {
-    height: 360px;
+    height: 460px;
     overflow-y: auto;
     display: flex;
     flex-direction: column-reverse;
     background: #ffffff;
-    padding: 10px 4px;
-    margin-bottom: 8px;
+    padding: 12px 6px;
+    margin-bottom: 10px;
 }
 
 .ios-chat-scroll::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
 }
 
 .ios-chat-scroll::-webkit-scrollbar-thumb {
@@ -322,27 +348,27 @@ p, span, label {
 
 .ios-sys {
     align-self: center;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     color: #8e8e93 !important;
-    margin: 10px 0 8px 0;
+    margin: 12px 0 8px 0;
 }
 
 .ios-npc-row {
     display: flex;
     justify-content: flex-start;
     align-items: flex-end;
-    gap: 5px;
-    margin-bottom: 5px;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 
 .ios-bubble-npc {
     background: #e9e9eb;
     color: #111111 !important;
-    padding: 8px 13px;
-    border-radius: 18px 18px 18px 5px;
-    max-width: 76%;
-    font-size: 0.89rem;
-    line-height: 1.48;
+    padding: 10px 15px;
+    border-radius: 20px 20px 20px 6px;
+    max-width: 78%;
+    font-size: 0.96rem;
+    line-height: 1.52;
     word-break: break-word;
 }
 
@@ -350,45 +376,45 @@ p, span, label {
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
-    gap: 5px;
-    margin-bottom: 5px;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 
 .ios-bubble-me {
     background: #34c759;
     color: #ffffff !important;
-    padding: 8px 13px;
-    border-radius: 18px 18px 5px 18px;
-    max-width: 76%;
-    font-size: 0.89rem;
-    line-height: 1.48;
+    padding: 10px 15px;
+    border-radius: 20px 20px 6px 20px;
+    max-width: 78%;
+    font-size: 0.96rem;
+    line-height: 1.52;
     word-break: break-word;
 }
 
 .ios-msg-time {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     color: #8e8e93 !important;
     white-space: nowrap;
 }
 
-/* 하단 문자 메시지 SMS 입력창 모양 */
+/* 하단 문자 메시지 SMS 입력창 */
 .ios-input-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .ios-plus {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     border-radius: 99px;
     background: #f2f2f7;
     color: #3a3a3c !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 500;
     flex-shrink: 0;
 }
@@ -397,20 +423,20 @@ p, span, label {
     flex: 1;
     border: 1px solid #d1d1d6;
     border-radius: 99px;
-    padding: 6px 14px;
-    font-size: 0.83rem;
+    padding: 8px 16px;
+    font-size: 0.88rem;
     color: #8e8e93 !important;
     background: #ffffff;
 }
 
-/* 답장 선택 버튼 (키보드 예측/빠른 답장 스타일) */
+/* 답장 선택 버튼 */
 .st-key-phone_replies div.stButton > button {
     background: #f2f2f7 !important;
     border: 1px solid #e5e5ea !important;
     border-radius: 12px !important;
-    padding: 8px 12px !important;
+    padding: 10px 14px !important;
     text-align: left !important;
-    min-height: 2.3rem !important;
+    min-height: 2.6rem !important;
 }
 
 .st-key-phone_replies div.stButton > button:hover {
@@ -420,24 +446,24 @@ p, span, label {
 
 .st-key-phone_replies div.stButton > button p {
     color: #111111 !important;
-    font-size: 0.84rem !important;
-    line-height: 1.4 !important;
+    font-size: 0.91rem !important;
+    line-height: 1.45 !important;
 }
 
-/* 하단 네비 버튼 (메모 / 다음 날) */
+/* 하단 네비 버튼 */
 .st-key-phone_nav [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    gap: 8px !important;
-    margin-top: 8px;
+    gap: 10px !important;
+    margin-top: 10px;
 }
 
 .st-key-phone_nav div.stButton > button {
     background: #f2f2f7 !important;
     border: 1px solid #e5e5ea !important;
-    border-radius: 10px !important;
-    padding: 7px 10px !important;
-    min-height: 2.3rem !important;
+    border-radius: 12px !important;
+    padding: 9px 12px !important;
+    min-height: 2.6rem !important;
 }
 
 .st-key-phone_nav div.stButton > button:hover {
@@ -446,26 +472,26 @@ p, span, label {
 
 .st-key-phone_nav div.stButton > button p {
     color: #111111 !important;
-    font-size: 0.83rem !important;
+    font-size: 0.9rem !important;
     font-weight: 600 !important;
 }
 
-/* 메모장 화면 */
+/* 메모장 화면 (크기 확대: 460px) */
 .memo-scroll {
-    height: 360px;
+    height: 460px;
     overflow-y: auto;
     background: #fffdf5;
     border: 1px solid #ece6d2;
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 8px;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
 }
 
 .memo-item {
-    padding: 9px 10px;
+    padding: 12px 10px;
     border-bottom: 1px dashed #e3dcc5;
-    font-size: 0.84rem;
-    line-height: 1.55;
+    font-size: 0.94rem;
+    line-height: 1.65;
     color: #2c2820 !important;
 }
 
@@ -475,30 +501,33 @@ p, span, label {
 
 /* 하단 아이폰 홈 바 */
 .ios-homebar {
-    width: 115px;
-    height: 4px;
+    width: 130px;
+    height: 5px;
     background: #111111;
     border-radius: 99px;
-    margin: 10px auto 2px auto;
+    margin: 12px auto 2px auto;
 }
 
-/* 엔딩 박스 (폰 바깥) */
+/* 엔딩 박스 */
 .story-box {
     background: var(--panel);
     border: 1px solid var(--line);
     border-left: 3px solid #6f3434;
-    padding: 22px 24px;
+    padding: 24px 26px;
     border-radius: 3px;
     line-height: 1.9;
     margin: 14px 0 20px 0;
 }
 
-[data-testid="stProgress"] > div > div > div > div {
-    background: var(--accent) !important;
+/* 게이지 색상 보정 */
+[data-testid="stProgress"] [role="progressbar"],
+[data-testid="stProgress"] > div > div > div {
+    background-color: #39322e !important;
 }
 
-[data-testid="stProgress"] > div > div > div {
-    background: #39322e !important;
+[data-testid="stProgress"] [role="progressbar"] > div,
+[data-testid="stProgress"] > div > div > div > div {
+    background-color: var(--accent) !important;
 }
 
 hr {
@@ -839,7 +868,7 @@ def push_day_messages(day: int):
 
 
 def init_game():
-    st.session_state.phase = "phone"  # 처음부터 바로 핸드폰으로 시작
+    st.session_state.phase = "phone"
     st.session_state.phone_view = "list"
     st.session_state.active_chat = None
     st.session_state.day = 1
@@ -985,8 +1014,8 @@ if st.session_state.phase == "phone":
                     is_unread = cid not in st.session_state.replied_today
                     last_msg = st.session_state.histories[cid][-1]
                     preview = last_msg["text"]
-                    if len(preview) > 20:
-                        preview = preview[:20] + "..."
+                    if len(preview) > 22:
+                        preview = preview[:22] + "..."
                     t_label = last_msg.get("label_time", last_msg.get("time", ""))
 
                     with st.container(key=f"row_{cid}"):
