@@ -536,6 +536,8 @@ hr {
 # -------------------------------------------------
 # 1. 인물 및 일차별 첫 메시지 데이터
 # -------------------------------------------------
+STATE_VERSION = 3
+
 CONTACTS = {
     "mori": {"name": "모리 오가이", "initial": "모", "color": "#8c3b3b"},
     "dazai": {"name": "다자이 오사무", "initial": "다", "color": "#55687a"},
@@ -881,6 +883,7 @@ def push_day_messages(day: int):
 
 
 def init_game():
+    st.session_state.state_version = STATE_VERSION
     st.session_state.phase = "phone"
     st.session_state.phone_view = "list"
     st.session_state.active_chat = None
@@ -907,12 +910,16 @@ def go_list():
 
 
 def process_free_reply(cid: str, user_text: str):
+    if "msg_counts" not in st.session_state:
+        st.session_state.msg_counts = {k: 0 for k in CONTACTS}
+
     day = st.session_state.day
     base_clock = DAILY_INCOMING[day][cid]["clock"]
-    offset = st.session_state.msg_counts[cid] * 2 + 2
+    count = st.session_state.msg_counts.get(cid, 0)
+    offset = count * 2 + 2
     t_me = next_minute_str(base_clock, offset)
     t_npc = next_minute_str(base_clock, offset + 1)
-    st.session_state.msg_counts[cid] += 1
+    st.session_state.msg_counts[cid] = count + 1
 
     st.session_state.histories[cid].append(
         {"sender": "me", "text": user_text, "time": t_me}
@@ -971,7 +978,26 @@ def next_day():
     push_day_messages(st.session_state.day)
 
 
-if "phase" not in st.session_state:
+REQUIRED_KEYS = (
+    "state_version",
+    "phase",
+    "phone_view",
+    "active_chat",
+    "day",
+    "hp",
+    "suspicion",
+    "replied_today",
+    "msg_counts",
+    "last_notice",
+    "ending_key",
+    "histories",
+)
+
+if (
+    st.session_state.get("state_version") != STATE_VERSION
+    or any(k not in st.session_state for k in REQUIRED_KEYS)
+    or st.session_state.get("day") not in DAILY_INCOMING
+):
     init_game()
 
 
@@ -1074,7 +1100,7 @@ if st.session_state.phase == "phone":
                     st.button(f"안 읽음 {unread_count}", disabled=True, key="wait_day_btn")
 
         # 2) 아이폰 문자 스타일 1:1 대화방 (직접 입력)
-        elif st.session_state.phone_view == "chat":
+        elif st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
             cid = st.session_state.active_chat
             info = CONTACTS[cid]
 
@@ -1140,16 +1166,16 @@ if st.session_state.phase == "phone":
                 with c_send:
                     submitted = st.form_submit_button("전송")
 
-                if submitted and user_msg.strip():
-                    process_free_reply(cid, user_msg.strip())
-                    st.rerun()
+            if submitted and user_msg.strip():
+                process_free_reply(cid, user_msg.strip())
+                st.rerun()
 
         # 하단 홈 바
         st.markdown('<div class="ios-homebar"></div>', unsafe_allow_html=True)
 
 # [B] 엔딩 화면
 elif st.session_state.phase == "ending":
-    end = ENDINGS[st.session_state.ending_key]
+    end = ENDINGS.get(st.session_state.ending_key, ENDINGS["ending_survive"])
     st.markdown(f"### {end['title']}")
     formatted = end["text"].replace("\n", "<br>")
     st.markdown(f'<div class="story-box">{formatted}</div>', unsafe_allow_html=True)
