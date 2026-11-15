@@ -4,11 +4,12 @@ import re
 import time
 import streamlit as st
 
-# 페이지 설정
+# 페이지 설정 (사이드바 숨김)
 st.set_page_config(
     page_title="기시 유스케 생존기",
     page_icon="🕯️",
-    layout="wide"
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
 # 디자인 테마 + 아이폰/카톡 스타일 CSS
@@ -33,13 +34,15 @@ st.markdown("""
     font-family: 'Noto Sans KR', sans-serif;
 }
 
-header[data-testid="stHeader"] {
-    background: transparent !important;
+header[data-testid="stHeader"],
+[data-testid="stSidebar"],
+[data-testid="stSidebarCollapsedControl"] {
+    display: none !important;
 }
 
 .block-container {
-    max-width: 900px;
-    padding-top: 3.4rem;
+    max-width: 600px;
+    padding-top: 2.2rem;
     padding-bottom: 3rem;
 }
 
@@ -50,11 +53,6 @@ h1, h2, h3 {
 
 p, span, label {
     color: var(--text);
-}
-
-[data-testid="stSidebar"] {
-    background: #191817;
-    border-right: 1px solid var(--line);
 }
 
 /* 기본 버튼 */
@@ -543,17 +541,6 @@ div.stButton > button p {
     margin: 14px 0 20px 0;
 }
 
-/* 게이지 색상 보정 */
-[data-testid="stProgress"] [role="progressbar"],
-[data-testid="stProgress"] > div > div > div {
-    background-color: #39322e !important;
-}
-
-[data-testid="stProgress"] [role="progressbar"] > div,
-[data-testid="stProgress"] > div > div > div > div {
-    background-color: var(--accent) !important;
-}
-
 hr {
     border-color: var(--line) !important;
 }
@@ -564,7 +551,7 @@ hr {
 # -------------------------------------------------
 # 1. 인물 및 일차별 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 4
+STATE_VERSION = 5
 
 CONTACTS = {
     "mori": {"name": "모리 오가이", "initial": "모", "color": "#8c3b3b"},
@@ -1049,36 +1036,16 @@ if (
 
 
 # -------------------------------------------------
-# 4. 사이드바 HUD
+# 4. 메인 화면 (핸드폰 단독)
 # -------------------------------------------------
 unread_count = len(CONTACTS) - len(st.session_state.replied_today)
 
-with st.sidebar:
-    st.subheader("STATUS")
-    st.write(f"생존 일차 : {st.session_state.day} / 3일차")
-    st.write(f"안 읽은 톡 : {unread_count}건")
-
-    st.divider()
-
-    st.write(f"체력 : {st.session_state.hp} / 100")
-    st.progress(st.session_state.hp / 100)
-
-    st.write(f"의심 : {st.session_state.suspicion} / 100")
-    st.progress(st.session_state.suspicion / 100)
-
-    st.divider()
-    st.caption("PORT MAFIA / YUSUKE PHONE")
-
-
-# -------------------------------------------------
-# 5. 메인 화면
-# -------------------------------------------------
 st.markdown(
     '<p class="opening-line">눈앞에 핸드폰이 있다......</p>',
     unsafe_allow_html=True,
 )
 
-# [A] 처음부터 바로 핸드폰 화면
+# [A] 핸드폰 화면
 if st.session_state.phase == "phone":
     with st.container(border=True, key="phone_shell"):
         battery = max(12, st.session_state.hp)
