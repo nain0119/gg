@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 
 # 페이지 설정
@@ -7,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 디자인 테마 (기존 다크 서책 컬러 + 스마트폰 메신저 UI)
+# 디자인 테마 + 스마트폰 채팅앱 CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
@@ -31,8 +32,8 @@ st.markdown("""
 
 .block-container {
     max-width: 820px;
-    padding-top: 2.2rem;
-    padding-bottom: 4rem;
+    padding-top: 2rem;
+    padding-bottom: 3.5rem;
 }
 
 h1, h2, h3 {
@@ -49,93 +50,258 @@ p, span, label {
     border-right: 1px solid var(--line);
 }
 
-/* 스마트폰 프레임 */
-.phone-frame {
-    background: #141312;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 18px 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
-    margin-bottom: 18px;
+/* 진짜 네모난 스마트폰 본체 */
+.st-key-phone_shell {
+    max-width: 410px !important;
+    margin: 0 auto !important;
+    background: #11100f !important;
+    border: 3px solid #49413b !important;
+    border-radius: 26px !important;
+    padding: 12px 16px 12px 16px !important;
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.8), inset 0 0 0 1px #272320 !important;
 }
 
-.phone-topbar {
+/* 상단 노치 & 상태바 */
+.phone-notch {
+    width: 72px;
+    height: 5px;
+    background: #2f2a26;
+    border-radius: 99px;
+    margin: 2px auto 10px auto;
+}
+
+.phone-status {
     display: flex;
     justify-content: space-between;
-    font-size: 0.78rem;
-    color: var(--muted);
-    border-bottom: 1px solid #2f2a26;
-    padding-bottom: 8px;
-    margin-bottom: 14px;
-    letter-spacing: 1px;
-}
-
-.chat-header {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text);
-    padding-bottom: 10px;
-    border-bottom: 1px solid #2f2a26;
-    margin-bottom: 14px;
-}
-
-.chat-sub {
-    font-size: 0.82rem;
-    font-weight: 400;
-    color: var(--muted);
-    margin-left: 8px;
-}
-
-/* 말풍선 */
-.msg-row-npc {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.msg-row-me {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-bottom: 12px;
-}
-
-.msg-sender {
-    font-size: 0.78rem;
-    color: var(--muted);
+    font-size: 0.74rem;
+    color: #9b9389;
+    padding: 0 4px 8px 4px;
+    border-bottom: 1px solid #24201d;
     margin-bottom: 4px;
 }
 
-.bubble-npc {
-    background: #262321;
-    border: 1px solid #3c3530;
-    color: var(--text);
-    padding: 10px 14px;
-    border-radius: 4px 12px 12px 12px;
+/* 앱 상단 바 */
+.app-titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 4px 10px 4px;
+    border-bottom: 1px solid #2b2623;
+    margin-bottom: 6px;
+}
+
+.app-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #e7e1d8;
+}
+
+.app-badge {
+    font-size: 0.76rem;
+    color: #cf6a6a;
+    border: 1px solid #6f3434;
+    padding: 2px 8px;
+    border-radius: 99px;
+}
+
+/* 채팅방 상대 헤더 */
+.room-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 0;
+}
+
+.avatar-lg {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #f3ede5;
+    flex-shrink: 0;
+}
+
+.room-name {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: #e7e1d8;
+    line-height: 1.2;
+}
+
+.room-status {
+    font-size: 0.74rem;
+    color: #9b9389;
+}
+
+/* 스크롤 가능한 채팅창 (자동으로 하단 고정) */
+.chat-scroll {
+    height: 350px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    background: #171514;
+    border: 1px solid #2b2623;
+    border-radius: 10px;
+    padding: 12px 10px;
+    margin: 4px 0 8px 0;
+}
+
+.chat-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+    background: #3a332e;
+    border-radius: 99px;
+}
+
+.chat-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 말풍선 */
+.msg-sys {
+    align-self: center;
+    background: #23201d;
+    color: #9b9389;
+    font-size: 0.74rem;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin: 10px 0;
+}
+
+.msg-npc-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #f3ede5;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.msg-npc-body {
+    display: flex;
+    flex-direction: column;
     max-width: 78%;
-    line-height: 1.65;
-    font-size: 0.95rem;
+}
+
+.msg-name {
+    font-size: 0.73rem;
+    color: #9b9389;
+    margin-bottom: 3px;
+}
+
+.bubble-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.bubble-npc {
+    background: #282422;
+    border: 1px solid #3c3530;
+    color: #e7e1d8;
+    padding: 8px 12px;
+    border-radius: 3px 12px 12px 12px;
+    font-size: 0.89rem;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.msg-me-wrap {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 5px;
+    margin-bottom: 10px;
 }
 
 .bubble-me {
-    background: #462626;
-    border: 1px solid #6e3b3b;
-    color: #f3ede5;
-    padding: 10px 14px;
-    border-radius: 12px 4px 12px 12px;
-    max-width: 78%;
-    line-height: 1.65;
-    font-size: 0.95rem;
+    background: #612e2e;
+    border: 1px solid #824040;
+    color: #f5efe8;
+    padding: 8px 12px;
+    border-radius: 12px 3px 12px 12px;
+    max-width: 75%;
+    font-size: 0.89rem;
+    line-height: 1.55;
+    word-break: break-word;
 }
 
-.msg-sys {
-    text-align: center;
+.msg-time {
+    font-size: 0.68rem;
+    color: #7d756d;
+    white-space: nowrap;
+}
+
+/* 가짜 메시지 입력창 */
+.faux-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1c1a18;
+    border: 1px solid #332d29;
+    border-radius: 18px;
+    padding: 7px 14px;
     font-size: 0.82rem;
-    color: var(--muted);
-    margin: 12px 0;
+    color: #7d756d;
+    margin-bottom: 6px;
 }
 
+.faux-send {
+    color: #b56c65;
+    font-weight: 700;
+    font-size: 0.78rem;
+}
+
+/* 하단 홈 인디케이터 */
+.phone-homebar {
+    width: 110px;
+    height: 4px;
+    background: #49413b;
+    border-radius: 99px;
+    margin: 10px auto 2px auto;
+}
+
+/* 메모장 카드 */
+.memo-scroll {
+    height: 360px;
+    overflow-y: auto;
+    background: #171514;
+    border: 1px solid #2b2623;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.memo-item {
+    background: #211e1c;
+    border-left: 3px solid #824040;
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin-bottom: 9px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+}
+
+/* 도입 & 엔딩 상자 */
 .story-box {
     background: var(--panel);
     border: 1px solid var(--line);
@@ -146,34 +312,65 @@ p, span, label {
     margin: 14px 0 20px 0;
 }
 
-.memo-card {
-    background: #1c1a18;
-    border: 1px solid #3c3530;
-    padding: 14px 16px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    line-height: 1.75;
-    font-size: 0.94rem;
-}
-
-/* 버튼 */
+/* 기본 버튼 */
 div.stButton > button {
     width: 100%;
-    min-height: 2.75rem;
-    text-align: left;
     background: var(--panel) !important;
     color: var(--text) !important;
     border: 1px solid var(--line) !important;
-    border-radius: 4px;
-    padding: 10px 16px;
-    font-size: 0.95rem;
-    transition: 0.16s;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    transition: 0.15s;
 }
 
 div.stButton > button:hover {
     background: #302522 !important;
     border-color: var(--accent) !important;
     color: #ffffff !important;
+}
+
+/* 채팅 목록 버튼 스타일 */
+.st-key-phone_list button {
+    text-align: left !important;
+    background: #1a1817 !important;
+    border: 1px solid #2d2824 !important;
+    border-radius: 10px !important;
+    padding: 11px 13px !important;
+    font-size: 0.88rem !important;
+    line-height: 1.45 !important;
+}
+
+.st-key-phone_list button:hover {
+    background: #25211e !important;
+    border-color: #6f3434 !important;
+}
+
+/* 답장 버튼 스타일 */
+.st-key-phone_replies button {
+    text-align: left !important;
+    background: #271b1b !important;
+    border: 1px solid #593535 !important;
+    border-radius: 10px !important;
+    padding: 9px 12px !important;
+    font-size: 0.86rem !important;
+    line-height: 1.45 !important;
+}
+
+.st-key-phone_replies button:hover {
+    background: #3b2323 !important;
+    border-color: #a34b4b !important;
+}
+
+/* 상단 뒤로가기 & 하단 탭 버튼 */
+.st-key-phone_back button,
+.st-key-phone_nav button {
+    background: #1b1918 !important;
+    border: 1px solid #352f2b !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    font-size: 0.82rem !important;
+    min-height: 2.2rem !important;
 }
 
 [data-testid="stProgress"] > div > div > div > div {
@@ -195,16 +392,16 @@ hr {
 # 1. 인물 및 시나리오 데이터 (모리 / 다자이 / 츄야 / 아카네)
 # -------------------------------------------------
 CONTACTS = {
-    "mori": {"name": "모리 오가이", "status": "진료실 문 열려 있음"},
-    "dazai": {"name": "다자이 오사무", "status": "입수하기 좋은 날"},
-    "chuuya": {"name": "나카하라 츄야", "status": "건드리면 날아감"},
-    "akane": {"name": "아카네", "status": "."},
+    "mori": {"name": "모리 오가이", "initial": "모", "color": "#7a3535", "status": "진료실 문 열려 있음"},
+    "dazai": {"name": "다자이 오사무", "initial": "다", "color": "#4b5a69", "status": "입수하기 좋은 날"},
+    "chuuya": {"name": "나카하라 츄야", "initial": "츄", "color": "#8a5233", "status": "건드리면 날아감"},
+    "akane": {"name": "아카네", "initial": "아", "color": "#4c4846", "status": "."},
 }
 
-# 일차별(1~3일차) 각 인물 메시지 & 답장 선택지
 CHAT_SCRIPT = {
     1: {
         "mori": {
+            "time": "09:02",
             "incoming": "유스케 군~ 진료 시간 10분 지났는데 아직도 이불 속이니? ^^",
             "choices": [
                 {
@@ -228,6 +425,7 @@ CHAT_SCRIPT = {
             ],
         },
         "dazai": {
+            "time": "09:11",
             "incoming": "유스케~ 나 지금 다리 위인데 물 색깔 예술이야. 같이 뛰어내릴래?",
             "choices": [
                 {
@@ -237,7 +435,7 @@ CHAT_SCRIPT = {
                     "suspicion": -5,
                 },
                 {
-                    "reply": "무슨 일 있어? 나랑 맛있는 거라도 먹자 ㅠㅠ",
+                    "reply": "무슨 일 있어? 나랑 맛있는 거라도 먹자",
                     "npc_after": "...잠깐. 유스케가 방금 나한테 밥 사준다고 했어? 너 누구냐.",
                     "hp": 0,
                     "suspicion": 35,
@@ -245,6 +443,7 @@ CHAT_SCRIPT = {
             ],
         },
         "chuuya": {
+            "time": "09:18",
             "incoming": "야 기시. 내 책상 위 결재 서류 파쇄기에 처넣은 거 너지",
             "choices": [
                 {
@@ -262,6 +461,7 @@ CHAT_SCRIPT = {
             ],
         },
         "akane": {
+            "time": "09:24",
             "incoming": "아까 복도에서 들이받고 튄 거 너지",
             "choices": [
                 {
@@ -281,6 +481,7 @@ CHAT_SCRIPT = {
     },
     2: {
         "mori": {
+            "time": "10:05",
             "incoming": "어제 보낸 약은 잘 먹었니? 오늘따라 안 보이니 심심하구나.",
             "choices": [
                 {
@@ -298,6 +499,7 @@ CHAT_SCRIPT = {
             ],
         },
         "dazai": {
+            "time": "13:40",
             "incoming": "심심해~ 나 방금 츄야 모자에 낙서했는데 같이 구경할래?",
             "choices": [
                 {
@@ -315,6 +517,7 @@ CHAT_SCRIPT = {
             ],
         },
         "chuuya": {
+            "time": "15:12",
             "incoming": "어이, 어제 복도에서 마주칠 때마다 헛구역질 좀 하지 마. 열받으니까.",
             "choices": [
                 {
@@ -332,6 +535,7 @@ CHAT_SCRIPT = {
             ],
         },
         "akane": {
+            "time": "12:15",
             "incoming": "식당 안 가",
             "choices": [
                 {
@@ -351,6 +555,7 @@ CHAT_SCRIPT = {
     },
     3: {
         "mori": {
+            "time": "21:10",
             "incoming": "그러고 보니 유스케 군, 요즘 톡 말투가 묘하게 다를 때가 있더구나. 무슨 일 있니?",
             "choices": [
                 {
@@ -368,6 +573,7 @@ CHAT_SCRIPT = {
             ],
         },
         "dazai": {
+            "time": "22:03",
             "incoming": "유스케, 요즘 왜 자꾸 폰으로만 떠들어? 설마 진짜 다른 사람으로 바뀐 건 아니지?",
             "choices": [
                 {
@@ -385,6 +591,7 @@ CHAT_SCRIPT = {
             ],
         },
         "chuuya": {
+            "time": "22:41",
             "incoming": "야. 내일 아침엔 기어 나와라. 또 방구석에 짱박히면 문 따고 들어간다.",
             "choices": [
                 {
@@ -402,6 +609,7 @@ CHAT_SCRIPT = {
             ],
         },
         "akane": {
+            "time": "23:15",
             "incoming": "살아있냐",
             "choices": [
                 {
@@ -423,9 +631,9 @@ CHAT_SCRIPT = {
 
 MEMO_NOTES = [
     "1. 보스(모리 씨) 포함해서 아무한테나 다 반말 깐다. 존댓말 쓰면 그날로 지하실 간다.",
-    "2. 다자이 그 미친놈한테 '힘들다', '죽고 싶다' 비슷한 소리 금지. 츄야 뒷담화는 잘 받아준다.",
+    "2. 다자이한테 '힘들다', '죽고 싶다' 비슷한 소리 금지. 츄야 뒷담화는 잘 받아준다.",
     "3. 츄야랑 말 섞을 때 쫄지 마라. 사방에 츄야 얼굴 떠서 짜증 난다고 하면 납득한다.",
-    "4. 아카네는 나한테 원래 별 관심 없다. 갑자기 엄마처럼 걱정해 주면 의심받는다.",
+    "4. 아카네는 나한테 원래 별 관심 없다. 갑자기 걱정해 주면 의심받는다.",
     "5. 서류는 파쇄기 밥이다. 마늘이나 향 강한 음식 먹으면 위장 터진다.",
 ]
 
@@ -442,7 +650,7 @@ ENDINGS = {
         "title": "배드 엔딩 — 해킹 의심 및 방문 폭파",
         "text": (
             "의심 수치 100 달성. 답장 말투가 너무 수상하다.\n\n"
-            "잠시 후 방문 밖에서 익숙한 구둣발 소리와 함께 모리 오가이, 다자이 오사무, 나카하라 츄야가 동시에 들이닥친다. "
+            "잠시 후 방문 밖에서 구둣발 소리가 들리더니 모리 오가이, 다자이 오사무, 나카하라 츄야가 동시에 들이닥친다. "
             "\"유스케 탈을 쓴 게 누구신가 볼까?\" 그대로 지하 심문실로 직행한다."
         ),
     },
@@ -463,20 +671,26 @@ def clamp(val, low=0, high=100):
     return max(low, min(high, val))
 
 
+def next_minute_str(time_str: str, add_min: int) -> str:
+    h, m = map(int, time_str.split(":"))
+    total = h * 60 + m + add_min
+    return f"{(total // 60) % 24:02d}:{total % 60:02d}"
+
+
 def push_day_messages(day: int):
     day_data = CHAT_SCRIPT[day]
     for cid, data in day_data.items():
         st.session_state.histories[cid].append(
-            {"sender": "sys", "text": f"--- {day}일차 ---"}
+            {"sender": "sys", "text": f"{day}일차"}
         )
         st.session_state.histories[cid].append(
-            {"sender": "npc", "text": data["incoming"]}
+            {"sender": "npc", "text": data["incoming"], "time": data["time"]}
         )
 
 
 def init_game():
-    st.session_state.phase = "intro"  # intro | phone | ending
-    st.session_state.phone_view = "list"  # list | chat | memo
+    st.session_state.phase = "intro"
+    st.session_state.phone_view = "list"
     st.session_state.active_chat = None
     st.session_state.day = 1
     st.session_state.hp = 85
@@ -506,10 +720,17 @@ def go_view(view_name: str):
 
 def send_reply(cid: str, choice_idx: int):
     day = st.session_state.day
-    ch = CHAT_SCRIPT[day][cid]["choices"][choice_idx]
+    data = CHAT_SCRIPT[day][cid]
+    ch = data["choices"][choice_idx]
+    t_me = next_minute_str(data["time"], 2)
+    t_npc = next_minute_str(data["time"], 3)
 
-    st.session_state.histories[cid].append({"sender": "me", "text": ch["reply"]})
-    st.session_state.histories[cid].append({"sender": "npc", "text": ch["npc_after"]})
+    st.session_state.histories[cid].append(
+        {"sender": "me", "text": ch["reply"], "time": t_me}
+    )
+    st.session_state.histories[cid].append(
+        {"sender": "npc", "text": ch["npc_after"], "time": t_npc}
+    )
 
     st.session_state.hp = clamp(st.session_state.hp + ch.get("hp", 0))
     st.session_state.suspicion = clamp(
@@ -608,101 +829,168 @@ if st.session_state.phase == "intro":
     )
     st.button("핸드폰을 켠다", on_click=open_phone, key="open_phone_btn")
 
-# [B] 스마트폰 화면
+# [B] 진짜 네모난 스마트폰 화면
 elif st.session_state.phase == "phone":
-    st.markdown(
-        f"""
-        <div class="phone-frame">
-            <div class="phone-topbar">
-                <span>DAY {st.session_state.day}</span>
-                <span>YUSUKE OS</span>
-                <span>안 읽은 톡 {unread_count}</span>
-            </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # 1) 채팅 목록 화면
-    if st.session_state.phone_view == "list":
-        st.markdown('<div class="chat-header">메신저 목록</div>', unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        for cid, info in CONTACTS.items():
-            is_unread = cid not in st.session_state.replied_today
-            badge = "[미확인] " if is_unread else "[답장 완료] "
-            latest = CHAT_SCRIPT[st.session_state.day][cid]["incoming"]
-            st.button(
-                f"{badge}{info['name']}  |  {latest[:26]}...",
-                on_click=open_chat,
-                args=(cid,),
-                key=f"chat_list_{cid}",
-            )
-
-        st.write("")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.button("유스케의 메모장 보기", on_click=go_view, args=("memo",), key="open_memo")
-        with col2:
-            if unread_count == 0:
-                btn_txt = "3일차 마감 (엔딩 보기)" if st.session_state.day >= 3 else "잠자리에 든다 (다음 날로)"
-                st.button(btn_txt, on_click=next_day, key="next_day_btn")
-
-    # 2) 1:1 대화방 화면
-    elif st.session_state.phone_view == "chat":
-        cid = st.session_state.active_chat
-        info = CONTACTS[cid]
-
+    with st.container(border=True, key="phone_shell"):
+        # 상단 노치 & 상태바
+        battery = max(12, st.session_state.hp)
         st.markdown(
-            f'<div class="chat-header">{info["name"]}'
-            f'<span class="chat-sub">{info["status"]}</span></div>',
+            f'<div class="phone-notch"></div>'
+            f'<div class="phone-status">'
+            f'<span>DAY {st.session_state.day}</span>'
+            f'<span>PORT-NET LTE</span>'
+            f'<span>배터리 {battery}%</span>'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
-        # 대화 말풍선 렌더링
-        bubbles_html = ""
-        for msg in st.session_state.histories[cid]:
-            if msg["sender"] == "sys":
-                bubbles_html += f'<div class="msg-sys">{msg["text"]}</div>'
-            elif msg["sender"] == "npc":
-                bubbles_html += (
-                    f'<div class="msg-row-npc">'
-                    f'<span class="msg-sender">{info["name"]}</span>'
-                    f'<div class="bubble-npc">{msg["text"]}</div>'
+        # 1) 채팅 목록 화면
+        if st.session_state.phone_view == "list":
+            badge_txt = f"새 톡 {unread_count}" if unread_count > 0 else "모두 읽음"
+            st.markdown(
+                f'<div class="app-titlebar">'
+                f'<span class="app-title">채팅</span>'
+                f'<span class="app-badge">{badge_txt}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+            with st.container(key="phone_list"):
+                for cid, info in CONTACTS.items():
+                    is_unread = cid not in st.session_state.replied_today
+                    tag = "[안읽음] " if is_unread else "[읽음] "
+                    last_msg = st.session_state.histories[cid][-1]
+                    preview = last_msg["text"]
+                    if len(preview) > 22:
+                        preview = preview[:22] + "..."
+                    t_str = last_msg.get("time", "")
+                    st.button(
+                        f"{tag}**{info['name']}**  `{t_str}`\n\n{preview}",
+                        on_click=open_chat,
+                        args=(cid,),
+                        key=f"chat_list_{cid}",
+                    )
+
+            st.write("")
+            with st.container(key="phone_nav"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.button("메모장", on_click=go_view, args=("memo",), key="open_memo")
+                with col2:
+                    if unread_count == 0:
+                        btn_txt = "3일차 마감" if st.session_state.day >= 3 else "다음 날로"
+                        st.button(btn_txt, on_click=next_day, key="next_day_btn")
+                    else:
+                        st.button("답장 대기 중", disabled=True, key="wait_day_btn")
+
+        # 2) 1:1 채팅방 화면
+        elif st.session_state.phone_view == "chat":
+            cid = st.session_state.active_chat
+            info = CONTACTS[cid]
+
+            col_back, col_prof = st.columns([1.1, 3.9])
+            with col_back:
+                with st.container(key="phone_back"):
+                    st.button("< 목록", on_click=go_view, args=("list",), key="back_btn")
+            with col_prof:
+                st.markdown(
+                    f'<div class="room-profile">'
+                    f'<div class="avatar-lg" style="background:{info["color"]};">{info["initial"]}</div>'
+                    f'<div>'
+                    f'<div class="room-name">{info["name"]}</div>'
+                    f'<div class="room-status">{info["status"]}</div>'
                     f'</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
                 )
+
+            # 스크롤 채팅창 (flex-direction: column-reverse 로 최신 메시지 하단 유지)
+            items = []
+            for msg in st.session_state.histories[cid]:
+                safe_txt = html.escape(msg["text"])
+                t_str = msg.get("time", "")
+                if msg["sender"] == "sys":
+                    items.append(f'<div class="msg-sys">{safe_txt}</div>')
+                elif msg["sender"] == "npc":
+                    items.append(
+                        f'<div class="msg-npc-wrap">'
+                        f'<div class="avatar-sm" style="background:{info["color"]};">{info["initial"]}</div>'
+                        f'<div class="msg-npc-body">'
+                        f'<div class="msg-name">{info["name"]}</div>'
+                        f'<div class="bubble-row">'
+                        f'<div class="bubble-npc">{safe_txt}</div>'
+                        f'<span class="msg-time">{t_str}</span>'
+                        f'</div>'
+                        f'</div>'
+                        f'</div>'
+                    )
+                else:
+                    items.append(
+                        f'<div class="msg-me-wrap">'
+                        f'<span class="msg-time">{t_str}</span>'
+                        f'<div class="bubble-me">{safe_txt}</div>'
+                        f'</div>'
+                    )
+
+            if st.session_state.last_notice:
+                items.append(f'<div class="msg-sys">{st.session_state.last_notice}</div>')
+
+            chat_html = (
+                '<div class="chat-scroll"><div class="chat-inner">'
+                + "".join(items)
+                + '</div></div>'
+            )
+            st.markdown(chat_html, unsafe_allow_html=True)
+
+            # 하단 가짜 입력창 & 답장 선택지
+            if cid not in st.session_state.replied_today:
+                st.markdown(
+                    '<div class="faux-input">'
+                    '<span>보낼 답장을 고르세요...</span>'
+                    '<span class="faux-send">전송</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+                with st.container(key="phone_replies"):
+                    choices = CHAT_SCRIPT[st.session_state.day][cid]["choices"]
+                    for idx, ch in enumerate(choices):
+                        st.button(
+                            ch["reply"],
+                            on_click=send_reply,
+                            args=(cid, idx),
+                            key=f"reply_{st.session_state.day}_{cid}_{idx}",
+                        )
             else:
-                bubbles_html += (
-                    f'<div class="msg-row-me">'
-                    f'<span class="msg-sender">나 (기시 유스케)</span>'
-                    f'<div class="bubble-me">{msg["text"]}</div>'
-                    f'</div>'
+                st.markdown(
+                    '<div class="faux-input">'
+                    '<span>오늘 대화가 끝났습니다</span>'
+                    '<span class="faux-send">완료</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
                 )
 
-        if st.session_state.last_notice:
-            bubbles_html += f'<div class="msg-sys">[ {st.session_state.last_notice} ]</div>'
-
-        st.markdown(bubbles_html + "</div>", unsafe_allow_html=True)
-
-        # 선택지 or 뒤로가기
-        if cid not in st.session_state.replied_today:
-            st.caption("보낼 답장을 고른다")
-            choices = CHAT_SCRIPT[st.session_state.day][cid]["choices"]
-            for idx, ch in enumerate(choices):
-                st.button(
-                    ch["reply"],
-                    on_click=send_reply,
-                    args=(cid, idx),
-                    key=f"reply_{st.session_state.day}_{cid}_{idx}",
+        # 3) 메모장 화면
+        elif st.session_state.phone_view == "memo":
+            col_back, col_prof = st.columns([1.1, 3.9])
+            with col_back:
+                with st.container(key="phone_back"):
+                    st.button("< 목록", on_click=go_view, args=("list",), key="memo_back")
+            with col_prof:
+                st.markdown(
+                    '<div class="room-profile">'
+                    '<div>'
+                    '<div class="room-name">메모장</div>'
+                    '<div class="room-status">유스케의 생존 수칙</div>'
+                    '</div>'
+                    '</div>',
+                    unsafe_allow_html=True,
                 )
-        else:
-            st.button("목록으로 돌아간다", on_click=go_view, args=("list",), key="back_to_list")
 
-    # 3) 메모장 화면
-    elif st.session_state.phone_view == "memo":
-        st.markdown('<div class="chat-header">메모장 - 생존 수칙</div>', unsafe_allow_html=True)
-        notes_html = "".join(f'<div class="memo-card">{m}</div>' for m in MEMO_NOTES)
-        st.markdown(notes_html + "</div>", unsafe_allow_html=True)
-        st.button("목록으로 돌아간다", on_click=go_view, args=("list",), key="memo_back")
+            notes_html = "".join(f'<div class="memo-item">{m}</div>' for m in MEMO_NOTES)
+            st.markdown(f'<div class="memo-scroll">{notes_html}</div>', unsafe_allow_html=True)
+
+        # 하단 아이폰 스타일 홈 바
+        st.markdown('<div class="phone-homebar"></div>', unsafe_allow_html=True)
 
 # [C] 엔딩 화면
 elif st.session_state.phase == "ending":
