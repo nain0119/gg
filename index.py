@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 디자인 테마 + 아이폰/카톡 스타일 CSS
+# 디자인 테마 + PC 카카오톡 스타일 CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
@@ -44,8 +44,8 @@ header[data-testid="stHeader"],
 }
 
 .block-container {
-    max-width: 600px;
-    padding-top: 2.2rem;
+    max-width: 620px;
+    padding-top: 2rem;
     padding-bottom: 3rem;
 }
 
@@ -58,7 +58,7 @@ p, span, label {
     color: var(--text);
 }
 
-/* 기본 버튼 */
+/* 기본 버튼 (엔딩 화면용) */
 div.stButton > button {
     width: 100%;
     background: var(--panel) !important;
@@ -89,110 +89,242 @@ div.stButton > button p {
     margin-bottom: 16px;
 }
 
-/* 스마트폰 외형 */
-.st-key-phone_shell {
-    max-width: 460px !important;
-    min-height: 760px !important;
+/* PC 카카오톡 윈도우 전체 창 */
+.st-key-kakao_shell {
+    max-width: 490px !important;
     margin: 0 auto !important;
     background: #ffffff !important;
-    border: 10px solid #1f1d1c !important;
-    border-radius: 44px !important;
-    padding: 14px 18px 14px 18px !important;
-    box-shadow: 0 26px 65px rgba(0, 0, 0, 0.85), 0 0 0 1px #49413b !important;
+    border: 1px solid #3c3632 !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 폰 내부 기본 글자색 검은색 유지 */
-.st-key-phone_shell p,
-.st-key-phone_shell span,
-.st-key-phone_shell label,
-.st-key-phone_shell div {
-    color: #111111;
+.st-key-kakao_shell p,
+.st-key-kakao_shell span,
+.st-key-kakao_shell label,
+.st-key-kakao_shell div {
+    color: #191919;
 }
 
-/* 아이폰 상단 상태바 & 다이나믹 아일랜드 */
-.ios-statusbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 2px 12px 10px 12px;
-    font-size: 0.86rem;
-    font-weight: 700;
-    color: #111111 !important;
+/* 좌측 회색 레일(74px) + 우측 메인 창 가로 고정 분할 */
+.st-key-kakao_shell [data-testid="stHorizontalBlock"]:has(.st-key-k_rail) {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    min-height: 720px !important;
 }
 
-.ios-island {
-    width: 98px;
+.st-key-kakao_shell [data-testid="stHorizontalBlock"]:has(.st-key-k_rail) > div:nth-child(1) {
+    flex: 0 0 74px !important;
+    width: 74px !important;
+    min-width: 74px !important;
+    background: #ececee !important;
+    border-right: 1px solid #e1e1e4 !important;
+    padding: 18px 8px 14px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.st-key-kakao_shell [data-testid="stHorizontalBlock"]:has(.st-key-k_rail) > div:nth-child(2) {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    background: #ffffff !important;
+    padding: 8px 16px 14px 16px !important;
+}
+
+/* 좌측 레일 버튼 (친구 / 채팅 아이콘) */
+.st-key-k_rail div.stButton > button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px 2px !important;
+    min-height: 3.2rem !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+}
+
+.st-key-k_rail div.stButton > button:hover {
+    background: #e1e1e5 !important;
+}
+
+.st-key-k_rail div.stButton > button p {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: #77777d !important;
+    margin: 0 !important;
+}
+
+.st-key-k_btn_friends button::before,
+.st-key-k_btn_chats button::before {
+    content: "";
+    display: block;
+    width: 24px;
     height: 24px;
-    background: #111111;
-    border-radius: 99px;
+    margin: 0 auto 2px auto;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
 }
 
-.ios-battery {
-    display: inline-block;
-    background: #ffd60a;
-    color: #111111 !important;
-    font-size: 0.74rem;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 6px;
+.st-key-k_btn_friends button::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e8e93'%3E%3Cpath d='M12 12c2.8 0 5-2.2 5-5s-2.2-5-5-5-5 2.2-5 5 2.2 5 5 5zm0 2.4c-3.4 0-10 1.7-10 5V21h20v-1.6c0-3.3-6.6-5-10-5z'/%3E%3C/svg%3E");
 }
 
-/* 목록 상단 헤더 */
-.kakao-header {
+.st-key-k_btn_chats button::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e8e93'%3E%3Cpath d='M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6-.3 1.4-1.1 2.7-1.1 2.7s1.9-.2 3.6-1.1c1.3.4 2.7.6 4.1.6 5.5 0 10-3.6 10-8s-4.5-8-10-8z'/%3E%3C/svg%3E");
+}
+
+.st-key-k_active button::before {
+    filter: brightness(0.18);
+}
+
+.st-key-k_active div.stButton > button p {
+    color: #191919 !important;
+    font-weight: 700 !important;
+}
+
+.rail-badge-wrap {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 4px 12px 4px;
-    border-bottom: 1px solid #ececef;
+    justify-content: center;
+    margin-top: -8px;
     margin-bottom: 6px;
 }
 
-.kakao-title {
-    font-size: 1.35rem;
+.rail-badge {
+    background: #ff5133;
+    color: #ffffff !important;
+    font-size: 0.68rem;
     font-weight: 700;
-    color: #111111 !important;
+    padding: 1px 6px;
+    border-radius: 99px;
+    line-height: 1.3;
 }
 
-.kakao-day {
-    font-size: 0.86rem;
+.rail-bottom {
+    margin-top: 390px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
     color: #8e8e93 !important;
+    font-size: 0.72rem;
 }
 
-/* 채팅 목록 영역 */
-.st-key-phone_list {
-    min-height: 560px !important;
+/* 창 상단 우측 최소화/닫기 표시 */
+.win-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    font-size: 0.78rem;
+    color: #8e8e93 !important;
+    margin-bottom: 4px;
 }
 
-.st-key-phone_list [data-testid="stHorizontalBlock"] {
+/* 탭 헤더 (친구 / 채팅 ▾) */
+.k-top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.k-top-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #191919 !important;
+}
+
+.k-top-icons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #555558 !important;
+    font-size: 0.8rem;
+}
+
+/* 필터 알약 버튼 (전체 | 안읽음 N | DAY 1) */
+.st-key-k_filters [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 10px !important;
-    padding: 10px 2px !important;
-    border-bottom: 1px solid #f2f2f5;
+    gap: 6px !important;
+    margin-bottom: 10px;
 }
 
-.st-key-phone_list [data-testid="stHorizontalBlock"] > div:nth-child(1) {
-    flex: 0 0 56px !important;
-    width: 56px !important;
-    min-width: 56px !important;
-}
-
-.st-key-phone_list [data-testid="stHorizontalBlock"] > div:nth-child(2) {
-    flex: 1 1 auto !important;
+.st-key-k_filters [data-testid="stHorizontalBlock"] > div {
+    flex: 0 0 auto !important;
+    width: auto !important;
     min-width: 0 !important;
 }
 
-.st-key-phone_list [data-testid="stHorizontalBlock"] > div:nth-child(3) {
-    flex: 0 0 68px !important;
-    width: 68px !important;
-    min-width: 68px !important;
+.st-key-k_filters div.stButton > button {
+    background: #ffffff !important;
+    border: 1px solid #e2e2e6 !important;
+    border-radius: 99px !important;
+    padding: 4px 13px !important;
+    min-height: 2rem !important;
+    width: auto !important;
 }
 
+.st-key-k_filters div.stButton > button:hover {
+    background: #f4f4f6 !important;
+}
+
+.st-key-k_filters div.stButton > button p {
+    color: #191919 !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+}
+
+.st-key-k_pill_on div.stButton > button {
+    background: #191919 !important;
+    border-color: #191919 !important;
+}
+
+.st-key-k_pill_on div.stButton > button:hover {
+    background: #2c2c2e !important;
+}
+
+.st-key-k_pill_on div.stButton > button p {
+    color: #ffffff !important;
+}
+
+.k-day-pill {
+    font-size: 0.78rem;
+    color: #6e6e73 !important;
+    background: #f4f4f6;
+    border: 1px solid #e6e6ea;
+    border-radius: 99px;
+    padding: 5px 11px;
+    white-space: nowrap;
+}
+
+/* 아바타 공통 (카톡 둥근 사각형) */
 .k-avatar {
-    width: 52px;
-    height: 52px;
-    border-radius: 18px;
+    width: 46px;
+    height: 46px;
+    border-radius: 17px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #ffffff !important;
+    flex-shrink: 0;
+}
+
+.k-avatar-lg {
+    width: 54px;
+    height: 54px;
+    border-radius: 20px;
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -200,25 +332,173 @@ div.stButton > button p {
     font-weight: 700;
     font-size: 1.15rem;
     color: #ffffff !important;
+    flex-shrink: 0;
+}
+
+.k-avatar-sm {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #ffffff !important;
+    flex-shrink: 0;
 }
 
 .k-avatar img,
-.ios-avatar img {
+.k-avatar-lg img,
+.k-avatar-sm img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
+/* 친구 탭 내 프로필 & 섹션 */
+.k-my-profile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 2px 14px 2px;
+    border-bottom: 1px solid #ededf0;
+    margin-bottom: 12px;
+}
+
+.k-my-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.k-my-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #191919 !important;
+}
+
+.k-status-pill {
+    font-size: 0.74rem;
+    color: #555558 !important;
+    border: 1px solid #dcdce0;
+    border-radius: 99px;
+    padding: 3px 10px;
+    max-width: 175px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.k-sec-title {
+    font-size: 0.76rem;
+    color: #8e8e93 !important;
+    margin: 10px 0 8px 0;
+}
+
+.k-upd-strip {
+    display: flex;
+    gap: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ededf0;
+    margin-bottom: 10px;
+    overflow-x: auto;
+}
+
+.k-upd-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+}
+
+.k-upd-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff5133;
+    position: absolute;
+    top: -1px;
+    left: -1px;
+}
+
+.k-upd-name {
+    font-size: 0.72rem;
+    color: #191919 !important;
+    max-width: 52px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 목록 행 (채팅 탭 / 친구 탭 공통) */
+.st-key-k_rows {
+    min-height: 465px !important;
+}
+
+.st-key-k_rows [data-testid="stHorizontalBlock"] {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 6px 2px !important;
+}
+
+.st-key-k_rows [data-testid="stHorizontalBlock"] > div:nth-child(1) {
+    flex: 0 0 48px !important;
+    width: 48px !important;
+    min-width: 48px !important;
+}
+
+.st-key-k_rows [data-testid="stHorizontalBlock"] > div:nth-child(2) {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.st-key-k_rows [data-testid="stHorizontalBlock"] > div:nth-child(3) {
+    flex: 0 0 64px !important;
+    width: 64px !important;
+    min-width: 64px !important;
+}
+
+.st-key-k_rows div.stButton > button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-align: left !important;
+    padding: 4px 4px !important;
+    min-height: 2.8rem !important;
+    border-radius: 8px !important;
+}
+
+.st-key-k_rows div.stButton > button:hover {
+    background: #f5f5f7 !important;
+}
+
+.st-key-k_rows div.stButton > button p {
+    color: #7c7c80 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+}
+
+.st-key-k_rows div.stButton > button strong {
+    color: #191919 !important;
+    font-size: 0.94rem !important;
+}
+
 .k-meta {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 6px;
+    gap: 5px;
 }
 
 .k-time {
-    font-size: 0.76rem;
+    font-size: 0.7rem;
     color: #8e8e93 !important;
     white-space: nowrap;
 }
@@ -227,332 +507,309 @@ div.stButton > button p {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 7px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
     border-radius: 99px;
-    background: #ff5722;
+    background: #ff5133;
     color: #ffffff !important;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 700;
 }
 
 .k-badge-empty {
-    height: 22px;
+    height: 20px;
 }
 
-.st-key-phone_list div.stButton > button {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    text-align: left !important;
-    padding: 4px 6px !important;
-    min-height: 3.1rem !important;
-    border-radius: 10px !important;
-}
-
-.st-key-phone_list div.stButton > button:hover {
-    background: #f4f4f7 !important;
-}
-
-.st-key-phone_list div.stButton > button p {
-    color: #6e6e73 !important;
-    font-size: 0.87rem !important;
-    line-height: 1.45 !important;
-    margin: 0 !important;
-}
-
-.st-key-phone_list div.stButton > button strong {
-    color: #111111 !important;
-    font-size: 1.02rem !important;
-}
-
-/* 채팅방 상단 바 */
-.st-key-phone_topbar_row [data-testid="stHorizontalBlock"] {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 6px !important;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ececef;
-    margin-bottom: 6px;
-}
-
-.st-key-phone_topbar_row [data-testid="stHorizontalBlock"] > div:nth-child(1) {
-    flex: 0 0 82px !important;
-    width: 82px !important;
-    min-width: 82px !important;
-}
-
-.st-key-phone_topbar_row [data-testid="stHorizontalBlock"] > div:nth-child(2) {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-}
-
-.st-key-phone_topbar_row [data-testid="stHorizontalBlock"] > div:nth-child(3) {
-    flex: 0 0 82px !important;
-    width: 82px !important;
-    min-width: 82px !important;
-}
-
-.st-key-phone_back div.stButton > button {
-    background: #f2f2f7 !important;
-    border: 1px solid #e5e5ea !important;
-    border-radius: 99px !important;
-    padding: 5px 12px !important;
-    min-height: 2.2rem !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
-}
-
-.st-key-phone_back div.stButton > button p {
-    color: #111111 !important;
-    font-size: 0.88rem !important;
-    font-weight: 700 !important;
-}
-
-.ios-center-profile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-}
-
-.ios-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 99px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1rem;
-    color: #ffffff !important;
-}
-
-.ios-name {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #111111 !important;
-}
-
-/* 아이폰 SMS 채팅창 */
-.ios-chat-scroll {
-    height: 555px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column-reverse;
-    background: #ffffff;
-    padding: 12px 6px;
-    margin-bottom: 8px;
-}
-
-.ios-chat-scroll::-webkit-scrollbar {
-    width: 5px;
-}
-
-.ios-chat-scroll::-webkit-scrollbar-thumb {
-    background: #d1d1d6;
-    border-radius: 99px;
-}
-
-.ios-chat-inner {
-    display: flex;
-    flex-direction: column;
-}
-
-.ios-sys {
-    align-self: center;
-    font-size: 0.78rem;
-    color: #8e8e93 !important;
-    margin: 12px 0 8px 0;
-}
-
-.ios-npc-row {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-end;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-.ios-bubble-npc {
-    background: #e9e9eb;
-    color: #111111 !important;
-    padding: 10px 15px;
-    border-radius: 20px 20px 20px 6px;
-    max-width: 78%;
-    font-size: 0.96rem;
-    line-height: 1.52;
-    word-break: break-word;
-}
-
-.ios-img-bubble {
-    max-width: 70%;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid #e5e5ea;
-}
-
-.ios-img-bubble img {
-    width: 100%;
-    display: block;
-}
-
-.ios-me-row {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-.ios-bubble-me {
-    background: #34c759;
-    color: #ffffff !important;
-    padding: 10px 15px;
-    border-radius: 20px 20px 6px 20px;
-    max-width: 78%;
-    font-size: 0.96rem;
-    line-height: 1.52;
-    word-break: break-word;
-}
-
-.ios-msg-time {
-    font-size: 0.72rem;
-    color: #8e8e93 !important;
-    white-space: nowrap;
-}
-
-/* 상대 입력 중 말풍선 애니메이션 */
-.ios-typing {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #e9e9eb;
-    padding: 12px 15px;
-    border-radius: 20px 20px 20px 6px;
-    margin-bottom: 6px;
-}
-
-.ios-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #8e8e93;
-    animation: iosBlink 1.1s infinite ease-in-out;
-}
-
-.ios-dot:nth-child(2) { animation-delay: 0.18s; }
-.ios-dot:nth-child(3) { animation-delay: 0.36s; }
-
-@keyframes iosBlink {
-    0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
-    40% { opacity: 1; transform: scale(1); }
-}
-
-/* 실제 직접 입력 폼 */
-.st-key-phone_shell [data-testid="stForm"] {
-    border: none !important;
-    padding: 4px 0 0 0 !important;
-    background: transparent !important;
-}
-
-.st-key-phone_shell [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+/* 1:1 채팅방 상단 헤더 */
+.st-key-k_chat_top [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 8px !important;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e6e6ea;
 }
 
-.st-key-phone_shell [data-testid="stForm"] [data-testid="stHorizontalBlock"] > div:nth-child(1) {
+.st-key-k_chat_top [data-testid="stHorizontalBlock"] > div:nth-child(1) {
+    flex: 0 0 68px !important;
+    width: 68px !important;
+    min-width: 68px !important;
+}
+
+.st-key-k_chat_top [data-testid="stHorizontalBlock"] > div:nth-child(2) {
     flex: 1 1 auto !important;
     min-width: 0 !important;
 }
 
-.st-key-phone_shell [data-testid="stForm"] [data-testid="stHorizontalBlock"] > div:nth-child(2) {
-    flex: 0 0 70px !important;
-    width: 70px !important;
-    min-width: 70px !important;
+.st-key-k_back div.stButton > button {
+    background: #f4f4f6 !important;
+    border: 1px solid #e2e2e6 !important;
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    min-height: 2rem !important;
 }
 
-.st-key-phone_shell div[data-baseweb="input"] {
-    background-color: #ffffff !important;
-    border: 1px solid #d1d1d6 !important;
-    border-radius: 99px !important;
+.st-key-k_back div.stButton > button p {
+    color: #191919 !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+}
+
+.k-room-prof {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.k-room-name {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: #191919 !important;
+    line-height: 1.2;
+}
+
+.k-room-sub {
+    font-size: 0.72rem;
+    color: #8e8e93 !important;
+}
+
+/* PC 카톡 하늘색 채팅방 영역 */
+.k-chat-scroll {
+    height: 510px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    background: #bacee0;
+    border-radius: 6px;
+    padding: 12px 10px;
+    margin: 8px 0 8px 0;
+}
+
+.k-chat-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.k-chat-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 99px;
+}
+
+.k-chat-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+.k-sys-pill {
+    align-self: center;
+    background: rgba(0, 0, 0, 0.14);
+    color: #ffffff !important;
+    font-size: 0.72rem;
+    padding: 3px 11px;
+    border-radius: 99px;
+    margin: 10px 0 8px 0;
+}
+
+.k-npc-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.k-npc-body {
+    display: flex;
+    flex-direction: column;
+    max-width: 78%;
+}
+
+.k-npc-sender {
+    font-size: 0.73rem;
+    color: #2f3b47 !important;
+    margin-bottom: 3px;
+}
+
+.k-bubble-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.k-bubble-npc {
+    background: #ffffff;
+    color: #191919 !important;
+    padding: 8px 12px;
+    border-radius: 4px 12px 12px 12px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+    word-break: break-word;
+}
+
+.k-img-bubble {
+    max-width: 74%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.k-img-bubble img {
+    width: 100%;
+    display: block;
+}
+
+.k-me-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+
+.k-bubble-me {
+    background: #fee500;
+    color: #191919 !important;
+    padding: 8px 12px;
+    border-radius: 12px 4px 12px 12px;
+    max-width: 74%;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+    word-break: break-word;
+}
+
+.k-msg-time {
+    font-size: 0.66rem;
+    color: #465766 !important;
+    white-space: nowrap;
+}
+
+/* 입력 중 말풍선 */
+.k-typing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #ffffff;
+    padding: 10px 13px;
+    border-radius: 4px 12px 12px 12px;
+}
+
+.k-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #8e8e93;
+    animation: kBlink 1.1s infinite ease-in-out;
+}
+
+.k-dot:nth-child(2) { animation-delay: 0.18s; }
+.k-dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes kBlink {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+    40% { opacity: 1; transform: scale(1); }
+}
+
+/* 하단 직접 입력 폼 (노란 전송 버튼) */
+.st-key-kakao_shell [data-testid="stForm"] {
+    border: none !important;
+    padding: 2px 0 0 0 !important;
+    background: transparent !important;
+}
+
+.st-key-kakao_shell [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.st-key-kakao_shell [data-testid="stForm"] [data-testid="stHorizontalBlock"] > div:nth-child(1) {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.st-key-kakao_shell [data-testid="stForm"] [data-testid="stHorizontalBlock"] > div:nth-child(2) {
+    flex: 0 0 64px !important;
+    width: 64px !important;
+    min-width: 64px !important;
+}
+
+.st-key-kakao_shell div[data-baseweb="input"] {
+    background-color: #f6f6f8 !important;
+    border: 1px solid #e2e2e6 !important;
+    border-radius: 6px !important;
     padding: 2px 8px !important;
 }
 
-.st-key-phone_shell div[data-baseweb="base-input"] {
+.st-key-kakao_shell div[data-baseweb="base-input"] {
     background-color: transparent !important;
 }
 
-.st-key-phone_shell div[data-baseweb="input"] input {
+.st-key-kakao_shell div[data-baseweb="input"] input {
     background-color: transparent !important;
-    color: #111111 !important;
-    caret-color: #111111 !important;
-    font-size: 0.92rem !important;
+    color: #191919 !important;
+    caret-color: #191919 !important;
+    font-size: 0.9rem !important;
     border: none !important;
 }
 
-.st-key-phone_shell div[data-baseweb="input"] input::placeholder {
+.st-key-kakao_shell div[data-baseweb="input"] input::placeholder {
     color: #8e8e93 !important;
     opacity: 1 !important;
 }
 
-.st-key-phone_shell [data-testid="InputInstructions"] {
+.st-key-kakao_shell [data-testid="InputInstructions"] {
     display: none !important;
 }
 
-.st-key-phone_shell [data-testid="stFormSubmitButton"] button {
-    background: #34c759 !important;
-    border: none !important;
-    border-radius: 99px !important;
-    min-height: 2.5rem !important;
-    padding: 6px 10px !important;
+.st-key-kakao_shell [data-testid="stFormSubmitButton"] button {
+    background: #fee500 !important;
+    border: 1px solid #eed600 !important;
+    border-radius: 6px !important;
+    min-height: 2.4rem !important;
+    padding: 6px 8px !important;
 }
 
-.st-key-phone_shell [data-testid="stFormSubmitButton"] button:hover {
-    background: #28b34b !important;
+.st-key-kakao_shell [data-testid="stFormSubmitButton"] button:hover {
+    background: #f5dc00 !important;
 }
 
-.st-key-phone_shell [data-testid="stFormSubmitButton"] button p {
-    color: #ffffff !important;
+.st-key-kakao_shell [data-testid="stFormSubmitButton"] button p {
+    color: #191919 !important;
     font-weight: 700 !important;
+    font-size: 0.85rem !important;
+}
+
+/* 하단 다음 날로 버튼 */
+.st-key-k_nav {
+    margin-top: 8px;
+}
+
+.st-key-k_nav div.stButton > button {
+    background: #f4f4f6 !important;
+    border: 1px solid #e2e2e6 !important;
+    border-radius: 8px !important;
+    padding: 9px 12px !important;
+    min-height: 2.5rem !important;
+}
+
+.st-key-k_nav div.stButton > button:hover {
+    background: #e9e9ed !important;
+}
+
+.st-key-k_nav div.stButton > button p {
+    color: #191919 !important;
     font-size: 0.88rem !important;
-}
-
-/* 하단 네비 버튼 (다음 날로) */
-.st-key-phone_nav {
-    margin-top: 10px;
-}
-
-.st-key-phone_nav div.stButton > button {
-    background: #f2f2f7 !important;
-    border: 1px solid #e5e5ea !important;
-    border-radius: 12px !important;
-    padding: 10px 14px !important;
-    min-height: 2.7rem !important;
-}
-
-.st-key-phone_nav div.stButton > button:hover {
-    background: #e5e5ea !important;
-}
-
-.st-key-phone_nav div.stButton > button p {
-    color: #111111 !important;
-    font-size: 0.92rem !important;
     font-weight: 600 !important;
 }
 
-/* 하단 아이폰 홈 바 */
-.ios-homebar {
-    width: 130px;
-    height: 5px;
-    background: #111111;
-    border-radius: 99px;
-    margin: 12px auto 2px auto;
+.empty-msg {
+    text-align: center;
+    color: #8e8e93 !important;
+    font-size: 0.88rem;
+    padding: 80px 0;
 }
 
 /* 엔딩 박스 */
@@ -619,14 +876,22 @@ def render_avatar(info: dict, cls_name: str) -> str:
 # -------------------------------------------------
 # 1. 인물 및 일차별 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 7
+STATE_VERSION = 8
+
+MY_PROFILE = {
+    "name": "기시 유스케",
+    "initial": "유",
+    "color": "#3d3937",
+    "img": "images/yusuke.png",
+    "status": "살아가는 것만으로도 수고했어",
+}
 
 CONTACTS = {
-    "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
-    "dazai":  {"name": "자살 희망자", "initial": "자", "color": "#55687a", "img": "images/dazai.jpg"},
-    "chuuya": {"name": "망할 자식",   "initial": "망", "color": "#b0653b", "img": "images/chuuya.jpg"},
-    "akane":  {"name": "아카네",     "initial": "아", "color": "#6e6a68", "img": "images/akane.png"},
-    "jebi":   {"name": "제비",       "initial": "제", "color": "#4f6d63", "img": "images/jebi.png"},
+    "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg",   "status": "진료실 문 열려 있음"},
+    "dazai":  {"name": "자살 희망자", "initial": "자", "color": "#55687a", "img": "images/dazai.jpg",  "status": "입수하기 좋은 날"},
+    "chuuya": {"name": "망할 자식",   "initial": "망", "color": "#b0653b", "img": "images/chuuya.jpg", "status": "건드리면 날아감"},
+    "akane":  {"name": "아카네",     "initial": "아", "color": "#6e6a68", "img": "images/akane.png",  "status": "."},
+    "jebi":   {"name": "제비",       "initial": "제", "color": "#4f6d63", "img": "images/jebi.png",   "status": "출근 좀 해"},
 }
 
 DAILY_INCOMING = {
@@ -1025,7 +1290,9 @@ def push_day_messages(day: int):
 def init_game():
     st.session_state.state_version = STATE_VERSION
     st.session_state.phase = "phone"
-    st.session_state.phone_view = "list"
+    st.session_state.k_tab = "chats"        # friends | chats
+    st.session_state.phone_view = "list"    # list | chat
+    st.session_state.chat_filter = "all"    # all | unread
     st.session_state.active_chat = None
     st.session_state.day = 1
     st.session_state.hp = 85
@@ -1083,6 +1350,17 @@ def resolve_pending_reply():
     elif st.session_state.hp <= 0:
         st.session_state.ending_key = "ending_hp"
         st.session_state.phase = "ending"
+
+
+def go_tab(tab_name: str):
+    resolve_pending_reply()
+    st.session_state.k_tab = tab_name
+    st.session_state.phone_view = "list"
+    st.session_state.last_notice = ""
+
+
+def set_filter(filter_name: str):
+    st.session_state.chat_filter = filter_name
 
 
 def open_chat(cid: str):
@@ -1147,7 +1425,9 @@ def next_day():
 REQUIRED_KEYS = (
     "state_version",
     "phase",
+    "k_tab",
     "phone_view",
+    "chat_filter",
     "active_chat",
     "day",
     "hp",
@@ -1170,7 +1450,7 @@ if (
 
 
 # -------------------------------------------------
-# 4. 메인 화면 (핸드폰 단독)
+# 4. 메인 화면 (PC 카카오톡 UI)
 # -------------------------------------------------
 unread_count = len(CONTACTS) - len(st.session_state.read_today)
 unreplied_count = len(CONTACTS) - len(st.session_state.replied_today)
@@ -1180,173 +1460,290 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# [A] 핸드폰 화면
+# [A] 카카오톡 화면
 if st.session_state.phase == "phone":
-    with st.container(border=True, key="phone_shell"):
-        battery = max(12, st.session_state.hp)
-        st.markdown(
-            f'<div class="ios-statusbar">'
-            f'<span>9:30</span>'
-            f'<div class="ios-island"></div>'
-            f'<span class="ios-battery">{battery}</span>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    with st.container(border=True, key="kakao_shell"):
+        col_rail, col_main = st.columns([0.16, 0.84])
 
-        # 1) 카톡 스타일 채팅 목록 화면
-        if st.session_state.phone_view == "list":
+        # 좌측 회색 네비게이션 레일
+        with col_rail:
+            with st.container(key="k_rail"):
+                f_cls = "k_active" if st.session_state.k_tab == "friends" and st.session_state.phone_view == "list" else "k_idle_f"
+                c_cls = "k_active" if st.session_state.k_tab == "chats" or st.session_state.phone_view == "chat" else "k_idle_c"
+
+                with st.container(key=f_cls):
+                    with st.container(key="k_btn_friends"):
+                        st.button("친구", on_click=go_tab, args=("friends",), key="rail_friends")
+
+                with st.container(key=c_cls):
+                    with st.container(key="k_btn_chats"):
+                        st.button("채팅", on_click=go_tab, args=("chats",), key="rail_chats")
+
+                if unread_count > 0:
+                    st.markdown(
+                        f'<div class="rail-badge-wrap"><span class="rail-badge">{unread_count}</span></div>',
+                        unsafe_allow_html=True,
+                    )
+
+                st.markdown(
+                    f'<div class="rail-bottom">'
+                    f'<span>D-{st.session_state.day}</span>'
+                    f'<span>{max(12, st.session_state.hp)}%</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+        # 우측 메인 패널
+        with col_main:
             st.markdown(
-                f'<div class="kakao-header">'
-                f'<span class="kakao-title">채팅</span>'
-                f'<span class="kakao-day">DAY {st.session_state.day}</span>'
-                f'</div>',
+                '<div class="win-controls"><span>—</span><span>□</span><span>×</span></div>',
                 unsafe_allow_html=True,
             )
 
-            with st.container(key="phone_list"):
-                for cid, info in CONTACTS.items():
-                    is_unread = cid not in st.session_state.read_today
-                    last_msg = st.session_state.histories[cid][-1]
-                    preview = "(사진)" if last_msg["text"].startswith("img:") else last_msg["text"]
-                    if len(preview) > 22:
-                        preview = preview[:22] + "..."
-                    t_label = last_msg.get("label_time", last_msg.get("time", ""))
+            # 1) 채팅방 내부 화면
+            if st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
+                cid = st.session_state.active_chat
+                info = CONTACTS[cid]
+                pending = st.session_state.get("pending_reply")
+                is_typing_now = bool(pending and pending["cid"] == cid)
 
-                    with st.container(key=f"row_{cid}"):
-                        c_av, c_mid, c_meta = st.columns([0.9, 2.7, 1.0])
-                        with c_av:
-                            st.markdown(
-                                render_avatar(info, "k-avatar"),
-                                unsafe_allow_html=True,
+                with st.container(key="k_chat_top"):
+                    c_back, c_prof = st.columns([1, 4])
+                    with c_back:
+                        with st.container(key="k_back"):
+                            back_lbl = f"< {unread_count}" if unread_count > 0 else "< 목록"
+                            st.button(back_lbl, on_click=go_list, key="back_btn")
+                    with c_prof:
+                        st.markdown(
+                            f'<div class="k-room-prof">'
+                            f'{render_avatar(info, "k-avatar-sm")}'
+                            f'<div>'
+                            f'<div class="k-room-name">{info["name"]}</div>'
+                            f'<div class="k-room-sub">{info["status"]}</div>'
+                            f'</div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+
+                # 하늘색 PC 카톡 채팅창
+                items = []
+                for msg in st.session_state.histories[cid]:
+                    raw_txt = msg["text"]
+                    t_str = msg.get("time", "")
+                    if msg["sender"] == "sys":
+                        items.append(f'<div class="k-sys-pill">{html.escape(raw_txt)}</div>')
+                    elif msg["sender"] == "npc":
+                        if raw_txt.startswith("img:"):
+                            uri = load_image_uri(raw_txt[4:].strip())
+                            bubble = (
+                                f'<div class="k-img-bubble"><img src="{uri}"></div>'
+                                if uri
+                                else '<div class="k-bubble-npc">(사진)</div>'
                             )
-                        with c_mid:
-                            st.button(
-                                f"**{info['name']}**\n\n{preview}",
-                                on_click=open_chat,
-                                args=(cid,),
-                                key=f"chat_list_{cid}",
-                            )
-                        with c_meta:
-                            badge_html = (
-                                '<div class="k-badge">1</div>'
-                                if is_unread
-                                else '<div class="k-badge-empty"></div>'
-                            )
-                            st.markdown(
-                                f'<div class="k-meta">'
-                                f'<span class="k-time">{t_label}</span>'
-                                f'{badge_html}'
-                                f'</div>',
-                                unsafe_allow_html=True,
-                            )
-
-            with st.container(key="phone_nav"):
-                if unreplied_count == 0:
-                    btn_txt = "3일차 마감" if st.session_state.day >= 3 else "다음 날로"
-                    st.button(btn_txt, on_click=next_day, key="next_day_btn")
-                else:
-                    replied_n = len(st.session_state.replied_today)
-                    st.button(
-                        f"답장 대기 중 ({replied_n} / {len(CONTACTS)})",
-                        disabled=True,
-                        key="wait_day_btn",
-                    )
-
-        # 2) 아이폰 문자 스타일 1:1 대화방 (직접 입력)
-        elif st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
-            cid = st.session_state.active_chat
-            info = CONTACTS[cid]
-            pending = st.session_state.get("pending_reply")
-            is_typing_now = bool(pending and pending["cid"] == cid)
-
-            with st.container(key="phone_topbar_row"):
-                c_back, c_prof, c_sp = st.columns([1, 2.5, 1])
-                with c_back:
-                    with st.container(key="phone_back"):
-                        back_lbl = f"< {unread_count}" if unread_count > 0 else "< 목록"
-                        st.button(back_lbl, on_click=go_list, key="back_btn")
-                with c_prof:
-                    st.markdown(
-                        f'<div class="ios-center-profile">'
-                        f'{render_avatar(info, "ios-avatar")}'
-                        f'<div class="ios-name">{info["name"]}</div>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-                with c_sp:
-                    st.markdown("<div></div>", unsafe_allow_html=True)
-
-            # 아이폰 말풍선 채팅창
-            items = []
-            for msg in st.session_state.histories[cid]:
-                raw_txt = msg["text"]
-                t_str = msg.get("time", "")
-                if msg["sender"] == "sys":
-                    items.append(f'<div class="ios-sys">{html.escape(raw_txt)}</div>')
-                elif msg["sender"] == "npc":
-                    if raw_txt.startswith("img:"):
-                        uri = load_image_uri(raw_txt[4:].strip())
-                        bubble = (
-                            f'<div class="ios-img-bubble"><img src="{uri}"></div>'
-                            if uri
-                            else '<div class="ios-bubble-npc">(사진)</div>'
+                        else:
+                            bubble = f'<div class="k-bubble-npc">{html.escape(raw_txt)}</div>'
+                        items.append(
+                            f'<div class="k-npc-wrap">'
+                            f'{render_avatar(info, "k-avatar-sm")}'
+                            f'<div class="k-npc-body">'
+                            f'<div class="k-npc-sender">{info["name"]}</div>'
+                            f'<div class="k-bubble-row">'
+                            f'{bubble}'
+                            f'<span class="k-msg-time">{t_str}</span>'
+                            f'</div>'
+                            f'</div>'
+                            f'</div>'
                         )
                     else:
-                        bubble = f'<div class="ios-bubble-npc">{html.escape(raw_txt)}</div>'
-                    items.append(
-                        f'<div class="ios-npc-row">'
-                        f'{bubble}'
-                        f'<span class="ios-msg-time">{t_str}</span>'
-                        f'</div>'
-                    )
-                else:
-                    items.append(
-                        f'<div class="ios-me-row">'
-                        f'<span class="ios-msg-time">{t_str}</span>'
-                        f'<div class="ios-bubble-me">{html.escape(raw_txt)}</div>'
-                        f'</div>'
-                    )
+                        items.append(
+                            f'<div class="k-me-row">'
+                            f'<span class="k-msg-time">{t_str}</span>'
+                            f'<div class="k-bubble-me">{html.escape(raw_txt)}</div>'
+                            f'</div>'
+                        )
 
-            if is_typing_now:
-                items.append(
-                    '<div class="ios-npc-row">'
-                    '<div class="ios-typing">'
-                    '<span class="ios-dot"></span>'
-                    '<span class="ios-dot"></span>'
-                    '<span class="ios-dot"></span>'
-                    '</div>'
-                    '</div>'
+                if is_typing_now:
+                    items.append(
+                        f'<div class="k-npc-wrap">'
+                        f'{render_avatar(info, "k-avatar-sm")}'
+                        f'<div class="k-npc-body">'
+                        f'<div class="k-npc-sender">{info["name"]}</div>'
+                        f'<div class="k-typing">'
+                        f'<span class="k-dot"></span>'
+                        f'<span class="k-dot"></span>'
+                        f'<span class="k-dot"></span>'
+                        f'</div>'
+                        f'</div>'
+                        f'</div>'
+                    )
+                elif st.session_state.last_notice:
+                    items.append(f'<div class="k-sys-pill">{st.session_state.last_notice}</div>')
+
+                chat_html = (
+                    '<div class="k-chat-scroll"><div class="k-chat-inner">'
+                    + "".join(items)
+                    + '</div></div>'
                 )
-            elif st.session_state.last_notice:
-                items.append(f'<div class="ios-sys">{st.session_state.last_notice}</div>')
+                st.markdown(chat_html, unsafe_allow_html=True)
 
-            chat_html = (
-                '<div class="ios-chat-scroll"><div class="ios-chat-inner">'
-                + "".join(items)
-                + '</div></div>'
-            )
-            st.markdown(chat_html, unsafe_allow_html=True)
+                # 하단 직접 입력 폼
+                with st.form(key=f"chat_form_{cid}", clear_on_submit=True):
+                    c_inp, c_send = st.columns([4.3, 1.0])
+                    with c_inp:
+                        user_msg = st.text_input(
+                            "메시지",
+                            placeholder="입력 중..." if is_typing_now else "메시지 입력",
+                            label_visibility="collapsed",
+                            disabled=is_typing_now,
+                            key=f"input_{cid}",
+                        )
+                    with c_send:
+                        submitted = st.form_submit_button("전송", disabled=is_typing_now)
 
-            # 하단 직접 입력 폼
-            with st.form(key=f"chat_form_{cid}", clear_on_submit=True):
-                c_inp, c_send = st.columns([4.2, 1.1])
-                with c_inp:
-                    user_msg = st.text_input(
-                        "메시지",
-                        placeholder="입력 중..." if is_typing_now else "문자 메시지 · SMS",
-                        label_visibility="collapsed",
-                        disabled=is_typing_now,
-                        key=f"input_{cid}",
+                if submitted and user_msg.strip() and not is_typing_now:
+                    queue_free_reply(cid, user_msg.strip())
+                    st.rerun()
+
+            # 2) 친구 탭 (2번 스샷 스타일)
+            elif st.session_state.k_tab == "friends":
+                st.markdown(
+                    '<div class="k-top-header">'
+                    '<span class="k-top-title">친구</span>'
+                    '<span class="k-top-icons"></span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+                st.markdown(
+                    f'<div class="k-my-profile">'
+                    f'<div class="k-my-left">'
+                    f'{render_avatar(MY_PROFILE, "k-avatar-lg")}'
+                    f'<span class="k-my-name">{MY_PROFILE["name"]}</span>'
+                    f'</div>'
+                    f'<span class="k-status-pill">{MY_PROFILE["status"]}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+                # 업데이트한 친구 (오늘 안 읽은 톡이 남아 있는 친구)
+                upd_list = [cid for cid in CONTACTS if cid not in st.session_state.read_today]
+                if upd_list:
+                    upd_items = []
+                    for cid in upd_list:
+                        info = CONTACTS[cid]
+                        upd_items.append(
+                            f'<div class="k-upd-item">'
+                            f'<div class="k-upd-dot"></div>'
+                            f'{render_avatar(info, "k-avatar")}'
+                            f'<span class="k-upd-name">{info["name"]}</span>'
+                            f'</div>'
+                        )
+                    st.markdown(
+                        f'<div class="k-sec-title">업데이트한 친구 {len(upd_list)}</div>'
+                        f'<div class="k-upd-strip">{"".join(upd_items)}</div>',
+                        unsafe_allow_html=True,
                     )
-                with c_send:
-                    submitted = st.form_submit_button("전송", disabled=is_typing_now)
 
-            if submitted and user_msg.strip() and not is_typing_now:
-                queue_free_reply(cid, user_msg.strip())
-                st.rerun()
+                st.markdown(
+                    f'<div class="k-sec-title">친구 {len(CONTACTS)}</div>',
+                    unsafe_allow_html=True,
+                )
 
-        # 하단 홈 바
-        st.markdown('<div class="ios-homebar"></div>', unsafe_allow_html=True)
+                with st.container(key="k_rows"):
+                    for cid, info in CONTACTS.items():
+                        with st.container(key=f"frow_{cid}"):
+                            c_av, c_mid, c_meta = st.columns([0.8, 3.0, 0.9])
+                            with c_av:
+                                st.markdown(render_avatar(info, "k-avatar"), unsafe_allow_html=True)
+                            with c_mid:
+                                st.button(
+                                    f"**{info['name']}**\n\n{info['status']}",
+                                    on_click=open_chat,
+                                    args=(cid,),
+                                    key=f"fr_list_{cid}",
+                                )
+                            with c_meta:
+                                is_unread = cid not in st.session_state.read_today
+                                badge_html = '<div class="k-badge">1</div>' if is_unread else '<div class="k-badge-empty"></div>'
+                                st.markdown(f'<div class="k-meta">{badge_html}</div>', unsafe_allow_html=True)
+
+            # 3) 채팅 탭 (1번 스샷 스타일)
+            else:
+                st.markdown(
+                    '<div class="k-top-header">'
+                    '<span class="k-top-title">채팅 ▾</span>'
+                    '<span class="k-top-icons"></span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+                with st.container(key="k_filters"):
+                    c_all, c_unr, c_day = st.columns([1, 1.4, 1.3])
+                    with c_all:
+                        cls_a = "k_pill_on" if st.session_state.chat_filter == "all" else "k_pill_off"
+                        with st.container(key=cls_a):
+                            st.button("전체", on_click=set_filter, args=("all",), key="flt_all")
+                    with c_unr:
+                        cls_u = "k_pill_on" if st.session_state.chat_filter == "unread" else "k_pill_off"
+                        with st.container(key=cls_u):
+                            lbl_u = f"안읽음 {unread_count}" if unread_count > 0 else "안읽음"
+                            st.button(lbl_u, on_click=set_filter, args=("unread",), key="flt_unread")
+                    with c_day:
+                        st.markdown(
+                            f'<div class="k-day-pill">DAY {st.session_state.day} · {max(12, st.session_state.hp)}%</div>',
+                            unsafe_allow_html=True,
+                        )
+
+                with st.container(key="k_rows"):
+                    shown = 0
+                    for cid, info in CONTACTS.items():
+                        is_unread = cid not in st.session_state.read_today
+                        if st.session_state.chat_filter == "unread" and not is_unread:
+                            continue
+                        shown += 1
+                        last_msg = st.session_state.histories[cid][-1]
+                        preview = "(사진)" if last_msg["text"].startswith("img:") else last_msg["text"]
+                        if len(preview) > 22:
+                            preview = preview[:22] + "..."
+                        t_label = last_msg.get("label_time", last_msg.get("time", ""))
+
+                        with st.container(key=f"crow_{cid}"):
+                            c_av, c_mid, c_meta = st.columns([0.8, 2.8, 1.1])
+                            with c_av:
+                                st.markdown(render_avatar(info, "k-avatar"), unsafe_allow_html=True)
+                            with c_mid:
+                                st.button(
+                                    f"**{info['name']}**\n\n{preview}",
+                                    on_click=open_chat,
+                                    args=(cid,),
+                                    key=f"chat_list_{cid}",
+                                )
+                            with c_meta:
+                                badge_html = '<div class="k-badge">1</div>' if is_unread else '<div class="k-badge-empty"></div>'
+                                st.markdown(
+                                    f'<div class="k-meta">'
+                                    f'<span class="k-time">{t_label}</span>'
+                                    f'{badge_html}'
+                                    f'</div>',
+                                    unsafe_allow_html=True,
+                                )
+
+                    if shown == 0:
+                        st.markdown('<div class="empty-msg">읽지 않은 채팅이 없습니다.</div>', unsafe_allow_html=True)
+
+            # 하단 다음 날로 버튼 (목록 화면일 때만 표시)
+            if st.session_state.phone_view == "list":
+                with st.container(key="k_nav"):
+                    if unreplied_count == 0:
+                        btn_txt = "3일차 마감" if st.session_state.day >= 3 else "다음 날로"
+                        st.button(btn_txt, on_click=next_day, key="next_day_btn")
+                    else:
+                        replied_n = len(st.session_state.replied_today)
+                        st.button(
+                            f"답장 대기 중 ({replied_n} / {len(CONTACTS)})",
+                            disabled=True,
+                            key="wait_day_btn",
+                        )
 
     # 2초 텀 후 상대방 답장 출력
     pending = st.session_state.get("pending_reply")
