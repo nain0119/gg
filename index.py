@@ -1,96 +1,151 @@
-import random
-import re
+
 import streamlit as st
 
-# ---------------------------------------------------------
-# 1. 페이지 설정 및 흑백(검은 바탕 / 흰 글씨) 테마 CSS
-# ---------------------------------------------------------
+# 페이지 설정
 st.set_page_config(
     page_title="기시 유스케 생존기",
-    layout="wide",
+    page_icon="🕯️",
+    layout="wide"
 )
+
+# 디자인 테마
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+:root {
+    --bg: #171615;
+    --panel: #211f1d;
+    --text: #e7e1d8;
+    --muted: #9b9389;
+    --line: #49413b;
+    --accent: #a34b4b;
+}
+
+/* 전체 배경 */
+.stApp {
+    background:
+        radial-gradient(ellipse at top, #302522 0%, transparent 60%),
+        var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 화면 여백 */
+.block-container {
+    max-width: 950px;
+    padding-top: 3rem;
+    padding-bottom: 4rem;
+}
+
+/* 제목 */
+h1, h2, h3 {
+    font-family: 'Gowun Batang', serif !important;
+    color: var(--text) !important;
+}
+
+/* 본문 */
+p, span, label {
+    color: var(--text);
+}
+
+/* 사이드바 */
+[data-testid="stSidebar"] {
+    background: #191817;
+    border-right: 1px solid var(--line);
+}
+
+/* 이야기 상자 */
+.story-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid #6f3434;
+    padding: 25px;
+    border-radius: 3px;
+    line-height: 2;
+    margin: 20px 0;
+}
+
+/* 버튼 */
+div.stButton > button {
+    width: 100%;
+    min-height: 3rem;
+    background: var(--panel) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 3px;
+    padding: 12px 18px;
+    transition: 0.2s;
+}
+
+div.stButton > button:hover {
+    background: #302522 !important;
+    border-color: var(--accent) !important;
+    color: white !important;
+}
+
+/* 체력 게이지 */
+[data-testid="stProgress"] > div > div > div > div {
+    background: var(--accent) !important;
+}
+
+[data-testid="stProgress"] > div > div > div {
+    background: #39322e !important;
+}
+
+/* 구분선 */
+hr {
+    border-color: var(--line) !important;
+}
+
+/* 모바일 */
+@media (max-width: 700px) {
+    .block-container {
+        padding: 2rem 1rem;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# -------------------------------------------------
+# 메인 화면 기본 틀
+# -------------------------------------------------
 
 st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
-    :root {
-        --bg: #171615; --text: #e7e1d8; --muted: #9b9389;
-        --line: #49413b; --accent: #a34b4b; --accent-soft: #6f3434;
-    }
-    .stApp {
-        background: radial-gradient(ellipse at 50% 0%, #292321 0%, transparent 55%), var(--bg);
-        color: var(--text); font-family: 'Noto Sans KR', sans-serif;
-    }
-    [data-testid="stHeader"] { background: transparent; }
-    .block-container { max-width: 980px; padding-top: 3.2rem; padding-bottom: 4rem; }
-    h1, h2, h3 {
-        color: var(--text) !important; font-family: 'Gowun Batang', serif !important;
-        letter-spacing: -0.04em;
-    }
-    h1 { font-size: 2.35rem !important; font-weight: 700 !important; margin-bottom: .35rem !important; }
-    p, label, span, li { color: var(--text); }
-    [data-testid="stSidebar"] { background: #191817; border-right: 1px solid #39322e; }
-    [data-testid="stSidebar"] > div { padding-top: 2.5rem; }
-    [data-testid="stSidebar"] h3 {
-        font-family: 'Noto Sans KR', sans-serif !important; font-size: .92rem !important;
-        font-weight: 500 !important; color: var(--muted) !important; letter-spacing: .08em;
-    }
-    [data-testid="stProgress"] { margin-top: .7rem; }
-    [data-testid="stProgress"] > div > div > div > div { background: var(--accent) !important; }
-    [data-testid="stProgress"] > div > div > div { background: #39322e !important; }
-    .eyebrow {
-        color: #b56c65; font-size: .72rem; font-weight: 600;
-        letter-spacing: .22em; margin-bottom: .8rem;
-    }
-    .subnote { color: var(--muted); font-size: .84rem; letter-spacing: .04em; margin-bottom: 1.8rem; }
-    .story-box {
-        background: linear-gradient(135deg, rgba(42,37,34,.96), rgba(30,28,26,.98));
-        border: 1px solid var(--line); border-left: 3px solid var(--accent-soft);
-        padding: 26px 30px; border-radius: 3px; line-height: 2; font-size: 1rem;
-        color: var(--text); margin: 1.2rem 0 1.5rem; box-shadow: 0 12px 32px rgba(0,0,0,.12);
-    }
-    .story-box strong { color: #d9aaa0; font-weight: 700; }
-    .badge {
-        display: inline-block; padding: 5px 11px; border-radius: 2px; font-size: .78rem;
-        font-weight: 600; letter-spacing: .04em; background: #302522; color: #d9aaa0;
-        border: 1px solid #70423e; margin-top: 8px;
-    }
-    div.stButton > button {
-        width: 100%; min-height: 3.1rem; text-align: left; white-space: normal;
-        background: #211f1d !important; color: #ded7ce !important;
-        border: 1px solid #49413b !important; padding: 13px 17px; border-radius: 3px;
-        font-size: .94rem; line-height: 1.6;
-        transition: background .18s ease, border-color .18s ease, transform .18s ease;
-    }
-    div.stButton > button:hover {
-        background: #302522 !important; border-color: #98605a !important;
-        color: #fff4ec !important; transform: translateY(-1px);
-    }
-    div.stButton > button:focus:not(:active) {
-        border-color: #a34b4b !important; box-shadow: 0 0 0 1px #a34b4b !important;
-    }
-    hr { border-color: #49413b !important; }
-    @media (max-width: 700px) {
-        .block-container { padding: 2rem 1.1rem 3rem; }
-        h1 { font-size: 1.8rem !important; }
-        .story-box { padding: 20px 19px; font-size: .94rem; }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
+    '<p style="color:#b56c65; letter-spacing:4px; font-size:12px;">'
+    'PORT MAFIA  /  PERSONAL RECORD</p>',
+    unsafe_allow_html=True
 )
 
-SLOTS = ["오전", "오후", "밤"]
+st.title("기시 유스케 생존 기록")
+
+st.markdown(
+    '<p style="color:#9b9389;">요코하마 · 생존 기록</p>',
+    unsafe_allow_html=True
+)
+
+st.divider()
+
+# 사이드바
+with st.sidebar:
+    st.subheader("STATUS")
+    st.write("체력 : 100 / 100")
+    st.progress(1.0)
+
+    st.divider()
+
+    st.caption("PORT MAFIA")
+    st.caption("SURVIVAL RECORD")
 
 
-def to_html(text: str) -> str:
-    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
-    return text.replace("\n", "<br>")
+# 콘텐츠 영역
+st.markdown("### 기록")
 
+st.markdown("""
+<div class="story-box">
+    이곳에 이야기 내용을 작성하세요.
+</div>
+""", unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 2. 게임 이벤트 데이터
-# ---------------------------------------------------------
-def get_fixed_events():
-    return {
+st.button("다음으로")
