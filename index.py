@@ -1,6 +1,7 @@
 import html
 import random
 import re
+import time
 import streamlit as st
 
 # 페이지 설정
@@ -10,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 디자인 테마 + 세로로 긴 아이폰/카톡 스타일 CSS
+# 디자인 테마 + 아이폰/카톡 스타일 CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
@@ -401,7 +402,34 @@ div.stButton > button p {
     white-space: nowrap;
 }
 
-/* 실제 직접 입력 폼 (아이폰 하단 입력바 스타일) */
+/* 상대 입력 중 말풍선 애니메이션 */
+.ios-typing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e9e9eb;
+    padding: 12px 15px;
+    border-radius: 20px 20px 20px 6px;
+    margin-bottom: 6px;
+}
+
+.ios-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #8e8e93;
+    animation: iosBlink 1.1s infinite ease-in-out;
+}
+
+.ios-dot:nth-child(2) { animation-delay: 0.18s; }
+.ios-dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes iosBlink {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+    40% { opacity: 1; transform: scale(1); }
+}
+
+/* 실제 직접 입력 폼 */
 .st-key-phone_shell [data-testid="stForm"] {
     border: none !important;
     padding: 4px 0 0 0 !important;
@@ -536,7 +564,7 @@ hr {
 # -------------------------------------------------
 # 1. 인물 및 일차별 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 3
+STATE_VERSION = 4
 
 CONTACTS = {
     "mori": {"name": "모리 오가이", "initial": "모", "color": "#8c3b3b"},
@@ -892,38 +920,22 @@ def init_game():
     st.session_state.suspicion = 0
     st.session_state.replied_today = []
     st.session_state.msg_counts = {cid: 0 for cid in CONTACTS}
+    st.session_state.pending_reply = None
     st.session_state.last_notice = ""
     st.session_state.ending_key = None
     st.session_state.histories = {cid: [] for cid in CONTACTS}
     push_day_messages(1)
 
 
-def open_chat(cid: str):
-    st.session_state.active_chat = cid
-    st.session_state.phone_view = "chat"
-    st.session_state.last_notice = ""
+def resolve_pending_reply():
+    pending = st.session_state.get("pending_reply")
+    if not pending:
+        return
 
-
-def go_list():
-    st.session_state.phone_view = "list"
-    st.session_state.last_notice = ""
-
-
-def process_free_reply(cid: str, user_text: str):
-    if "msg_counts" not in st.session_state:
-        st.session_state.msg_counts = {k: 0 for k in CONTACTS}
-
-    day = st.session_state.day
-    base_clock = DAILY_INCOMING[day][cid]["clock"]
-    count = st.session_state.msg_counts.get(cid, 0)
-    offset = count * 2 + 2
-    t_me = next_minute_str(base_clock, offset)
-    t_npc = next_minute_str(base_clock, offset + 1)
-    st.session_state.msg_counts[cid] = count + 1
-
-    st.session_state.histories[cid].append(
-        {"sender": "me", "text": user_text, "time": t_me}
-    )
+    st.session_state.pending_reply = None
+    cid = pending["cid"]
+    user_text = pending["text"]
+    t_npc = pending["t_npc"]
 
     npc_lines, hp_d, sus_d = judge_and_reply(cid, user_text)
     first_today = cid not in st.session_state.replied_today
@@ -958,7 +970,41 @@ def process_free_reply(cid: str, user_text: str):
         st.session_state.phase = "ending"
 
 
+def open_chat(cid: str):
+    resolve_pending_reply()
+    st.session_state.active_chat = cid
+    st.session_state.phone_view = "chat"
+    st.session_state.last_notice = ""
+
+
+def go_list():
+    resolve_pending_reply()
+    st.session_state.phone_view = "list"
+    st.session_state.last_notice = ""
+
+
+def queue_free_reply(cid: str, user_text: str):
+    day = st.session_state.day
+    base_clock = DAILY_INCOMING[day][cid]["clock"]
+    count = st.session_state.msg_counts.get(cid, 0)
+    offset = count * 2 + 2
+    t_me = next_minute_str(base_clock, offset)
+    t_npc = next_minute_str(base_clock, offset + 1)
+    st.session_state.msg_counts[cid] = count + 1
+
+    st.session_state.histories[cid].append(
+        {"sender": "me", "text": user_text, "time": t_me}
+    )
+    st.session_state.last_notice = ""
+    st.session_state.pending_reply = {
+        "cid": cid,
+        "text": user_text,
+        "t_npc": t_npc,
+    }
+
+
 def next_day():
+    resolve_pending_reply()
     if st.session_state.day >= 3:
         st.session_state.ending_key = "ending_survive"
         st.session_state.phase = "ending"
@@ -988,6 +1034,7 @@ REQUIRED_KEYS = (
     "suspicion",
     "replied_today",
     "msg_counts",
+    "pending_reply",
     "last_notice",
     "ending_key",
     "histories",
@@ -1103,6 +1150,8 @@ if st.session_state.phase == "phone":
         elif st.session_state.phone_view == "chat" and st.session_state.active_chat in CONTACTS:
             cid = st.session_state.active_chat
             info = CONTACTS[cid]
+            pending = st.session_state.get("pending_reply")
+            is_typing_now = bool(pending and pending["cid"] == cid)
 
             with st.container(key="phone_topbar_row"):
                 c_back, c_prof, c_sp = st.columns([1, 2.5, 1])
@@ -1143,7 +1192,17 @@ if st.session_state.phase == "phone":
                         f'</div>'
                     )
 
-            if st.session_state.last_notice:
+            if is_typing_now:
+                items.append(
+                    '<div class="ios-npc-row">'
+                    '<div class="ios-typing">'
+                    '<span class="ios-dot"></span>'
+                    '<span class="ios-dot"></span>'
+                    '<span class="ios-dot"></span>'
+                    '</div>'
+                    '</div>'
+                )
+            elif st.session_state.last_notice:
                 items.append(f'<div class="ios-sys">{st.session_state.last_notice}</div>')
 
             chat_html = (
@@ -1159,19 +1218,32 @@ if st.session_state.phase == "phone":
                 with c_inp:
                     user_msg = st.text_input(
                         "메시지",
-                        placeholder="문자 메시지 · SMS",
+                        placeholder="입력 중..." if is_typing_now else "문자 메시지 · SMS",
                         label_visibility="collapsed",
+                        disabled=is_typing_now,
                         key=f"input_{cid}",
                     )
                 with c_send:
-                    submitted = st.form_submit_button("전송")
+                    submitted = st.form_submit_button("전송", disabled=is_typing_now)
 
-            if submitted and user_msg.strip():
-                process_free_reply(cid, user_msg.strip())
+            if submitted and user_msg.strip() and not is_typing_now:
+                queue_free_reply(cid, user_msg.strip())
                 st.rerun()
 
         # 하단 홈 바
         st.markdown('<div class="ios-homebar"></div>', unsafe_allow_html=True)
+
+    # 2초 텀 후 상대방 답장 출력
+    pending = st.session_state.get("pending_reply")
+    if (
+        st.session_state.phase == "phone"
+        and st.session_state.phone_view == "chat"
+        and pending
+        and pending["cid"] == st.session_state.active_chat
+    ):
+        time.sleep(2)
+        resolve_pending_reply()
+        st.rerun()
 
 # [B] 엔딩 화면
 elif st.session_state.phase == "ending":
