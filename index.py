@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 디자인 테마 + 확대된 아이폰/카톡 스타일 CSS
+# 디자인 테마 + 세로로 길어진 아이폰/카톡 스타일 CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
@@ -36,8 +36,8 @@ header[data-testid="stHeader"] {
 
 .block-container {
     max-width: 900px;
-    padding-top: 3.6rem;
-    padding-bottom: 4rem;
+    padding-top: 3.4rem;
+    padding-bottom: 3rem;
 }
 
 h1, h2, h3 {
@@ -82,12 +82,13 @@ div.stButton > button p {
     font-family: 'Gowun Batang', serif;
     font-size: 1.12rem;
     letter-spacing: 0.5px;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
-/* 스마트폰 외형 (크기 확대: 470px) */
+/* 스마트폰 외형 (세로 길이 확대) */
 .st-key-phone_shell {
-    max-width: 470px !important;
+    max-width: 460px !important;
+    min-height: 760px !important;
     margin: 0 auto !important;
     background: #ffffff !important;
     border: 10px solid #1f1d1c !important;
@@ -137,7 +138,7 @@ div.stButton > button p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 4px 12px 4px;
+    padding: 10px 4px 12px 4px;
     border-bottom: 1px solid #ececef;
     margin-bottom: 6px;
 }
@@ -153,13 +154,18 @@ div.stButton > button p {
     color: #8e8e93 !important;
 }
 
+/* 채팅 목록 영역 세로 여백 확보 */
+.st-key-phone_list {
+    min-height: 560px !important;
+}
+
 /* 채팅 목록 행 레이아웃 유지 */
 .st-key-phone_list [data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 10px !important;
-    padding: 8px 2px !important;
+    padding: 12px 2px !important;
     border-bottom: 1px solid #f2f2f5;
 }
 
@@ -232,7 +238,7 @@ div.stButton > button p {
     box-shadow: none !important;
     text-align: left !important;
     padding: 4px 6px !important;
-    min-height: 3rem !important;
+    min-height: 3.1rem !important;
     border-radius: 10px !important;
 }
 
@@ -321,9 +327,9 @@ div.stButton > button p {
     color: #111111 !important;
 }
 
-/* 아이폰 SMS 채팅창 (크기 확대: 460px) */
+/* 아이폰 SMS 채팅창 (세로 길이 확대: 540px) */
 .ios-chat-scroll {
-    height: 460px;
+    height: 540px;
     overflow-y: auto;
     display: flex;
     flex-direction: column-reverse;
@@ -476,9 +482,9 @@ div.stButton > button p {
     font-weight: 600 !important;
 }
 
-/* 메모장 화면 (크기 확대: 460px) */
+/* 메모장 화면 (세로 길이 확대: 610px) */
 .memo-scroll {
-    height: 460px;
+    height: 610px;
     overflow-y: auto;
     background: #fffdf5;
     border: 1px solid #ece6d2;
@@ -488,10 +494,10 @@ div.stButton > button p {
 }
 
 .memo-item {
-    padding: 12px 10px;
+    padding: 14px 10px;
     border-bottom: 1px dashed #e3dcc5;
-    font-size: 0.94rem;
-    line-height: 1.65;
+    font-size: 0.95rem;
+    line-height: 1.7;
     color: #2c2820 !important;
 }
 
@@ -505,7 +511,7 @@ div.stButton > button p {
     height: 5px;
     background: #111111;
     border-radius: 99px;
-    margin: 12px auto 2px auto;
+    margin: 14px auto 2px auto;
 }
 
 /* 엔딩 박스 */
