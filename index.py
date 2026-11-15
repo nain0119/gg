@@ -619,7 +619,7 @@ def render_avatar(info: dict, cls_name: str) -> str:
 # -------------------------------------------------
 # 1. 인물 및 하루치 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 8
+STATE_VERSION = 9
 
 CONTACTS = {
     "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
@@ -669,35 +669,18 @@ TODAY_INCOMING = {
     },
 }
 
-ENDINGS = {
-    "ending_survive": {
-        "title": "생존 엔딩 — 오늘 하루 무사 통과",
-        "text": (
-            "오늘 하루 침대 밖으로 한 발짝도 안 나가고 직접 친 답장만으로 포트 마피아를 버텨낸다. "
-            "모리의 약은 퀵으로 배달 오고, 다자이는 다리 위에서 헛소리를 멈추며, 츄야는 내일 보자고 이를 갈지만 "
-            "일단 오늘 정체는 안 들켰다. 살아가는 것만으로도 수고했다."
-        ),
-    },
-    "ending_caught": {
-        "title": "배드 엔딩 — 해킹 의심 및 방문 폭파",
-        "text": (
-            "의심 수치 100 달성. 답장 말투가 너무 수상하다.\n\n"
-            "잠시 후 방문 밖에서 구둣발 소리가 들리더니 모리 오가이, 다자이 오사무, 나카하라 츄야가 동시에 들이닥친다. "
-            "\"유스케 탈을 쓴 게 누구신가 볼까?\" 그대로 지하 심문실로 직행한다."
-        ),
-    },
-    "ending_hp": {
-        "title": "배드 엔딩 — 폰 보다가 기력 소진",
-        "text": (
-            "체력 0 달성. 원래부터 내구도가 종잇장인 시한부 몸뚱이가 톡만 치다가 방전된다. "
-            "손에 쥔 핸드폰이 침대 밑으로 툭 떨어지며 생존기가 종료된다."
-        ),
-    },
+SURVIVE_ENDING = {
+    "title": "오늘 하루 무사 통과",
+    "text": (
+        "오늘 하루 침대 밖으로 한 발짝도 안 나가고 직접 친 답장만으로 포트 마피아를 버텨낸다. "
+        "모리의 약은 퀵으로 배달 오고, 다자이는 다리 위에서 헛소리를 멈추며, 츄야는 내일 보자고 이를 갈지만 "
+        "일단 오늘 하루는 무사히 지나갔다. 살아가는 것만으로도 수고했다."
+    ),
 }
 
 
 # -------------------------------------------------
-# 2. 직접 입력 답장 판정 & 대사 생성 엔진
+# 2. 직접 입력 답장 대사 생성 엔진
 # -------------------------------------------------
 def is_polite_korean(text: str) -> bool:
     t = text.strip()
@@ -724,222 +707,111 @@ def has_any(text: str, words: list[str]) -> bool:
     return any(w in text for w in words)
 
 
-def judge_and_reply(cid: str, text: str) -> tuple[list[str], int, int]:
+def generate_npc_reply(cid: str, text: str) -> list[str]:
     t = text.strip()
     polite = is_polite_korean(t)
 
-    # 1) 보스 (모리 오가이) 판정
+    # 1) 보스 (모리 오가이)
     if cid == "mori":
         if polite:
-            return (
-                random.choice([
-                    ["...어라?", "방금 나한테 존댓말 썼니? 유스케 군 핸드폰 누가 훔쳐 갔니?"],
-                    ["보스님이라니. 유스케 군 머리를 어디 세게 박은 건 아니지? ^^"],
-                ]),
-                -5,
-                40,
-            )
+            return random.choice([
+                ["...어라?", "방금 나한테 존댓말 썼니? 유스케 군 핸드폰 누가 훔쳐 갔니?"],
+                ["보스님이라니. 유스케 군 머리를 어디 세게 박은 건 아니지? ^^"],
+            ])
         if has_any(t, ["사랑", "좋아", "존경", "보고 싶", "보고싶", "최고", "착하"]):
-            return (
-                ["어머나. 약 기운이 잘못 돌았나 보구나. 확인하러 좀 갈까? ^^"],
-                0,
-                35,
-            )
+            return ["어머나. 약 기운이 잘못 돌았나 보구나. 확인하러 좀 갈까? ^^"]
         if has_any(t, ["면상", "얼굴", "수명", "꺼져", "닥쳐", "죽", "귀찮", "시끄", "미친", "징그", "소름", "변태", "싫", "해부", "안 가", "안 감", "못 가", "못 나"]):
-            return (
-                random.choice([
-                    ["어머 기운 넘치네.", "그럼 오늘 치 약은 퀵으로 보내줄게."],
-                    ["하하, 그 험한 입을 보니 진짜 유스케 군이 맞구나. 약 챙겨둘게."],
-                ]),
-                10,
-                -8,
-            )
+            return random.choice([
+                ["어머 기운 넘치네.", "그럼 오늘 치 약은 퀵으로 보내줄게."],
+                ["하하, 그 험한 입을 보니 진짜 유스케 군이 맞구나. 약 챙겨둘게."],
+            ])
         if has_any(t, ["약", "진료", "아파", "아프", "병", "기침", "피", "살려", "사탕", "주사", "퀵"]):
-            return (
-                ["그래그래, 제 발로 기어 나올 리가 없지. 오늘 치 약 바로 보낸다."],
-                12,
-                -4,
-            )
-        return (
-            random.choice([
-                ["후후, 심심할 때마다 톡이나 하려무나. 약은 보내둘게."],
-                ["하하 여전히 뻔뻔해서 안심했네. 잘 먹고 살아남으렴."],
-            ]),
-            5,
-            -4,
-        )
+            return ["그래그래, 제 발로 기어 나올 리가 없지. 오늘 치 약 바로 보낸다."]
+        return random.choice([
+            ["후후, 심심할 때마다 톡이나 하려무나. 약은 보내둘게."],
+            ["하하 여전히 뻔뻔해서 안심했네. 잘 먹고 살아남으렴."],
+        ])
 
-    # 2) 자살 희망자 (다자이 오사무) 판정
+    # 2) 자살 희망자 (다자이 오사무)
     if cid == "dazai":
         if polite:
-            return (
-                random.choice([
-                    ["...잠깐.", "유스케가 지금 나한테 존댓말을 쓴 거야? 너 누구냐."],
-                    ["어라라? 유스케가 예의범절을 삼켰나? 수상한데~"],
-                ]),
-                0,
-                40,
-            )
+            return random.choice([
+                ["...잠깐.", "유스케가 지금 나한테 존댓말을 쓴 거야? 너 누구냐."],
+                ["어라라? 유스케가 예의범절을 삼켰나? 수상한데~"],
+            ])
         if has_any(t, ["츄야", "꼬맹", "모자", "낙서", "땅꼬마", "키", "중력"]):
-            return (
-                ["오~ 역시 츄야 놀릴 때만 장단이 척척 맞는다니까."],
-                0,
-                -8,
-            )
+            return ["오~ 역시 츄야 놀릴 때만 장단이 척척 맞는다니까."]
         if has_any(t, ["개소리", "미친", "혼자", "싫", "안 해", "안 감", "살", "생존", "이승", "꺼져", "닥쳐", "안 죽", "죽기 싫", "의미", "면상"]):
-            return (
-                random.choice([
-                    ["흥, 여전히 노잼 생존주의자네. 치사해."],
-                    ["하긴 네가 나 좋아서 나올 리가 없지. 납득했어~"],
-                ]),
-                0,
-                -8,
-            )
+            return random.choice([
+                ["흥, 여전히 노잼 생존주의자네. 치사해."],
+                ["하긴 네가 나 좋아서 나올 리가 없지. 납득했어~"],
+            ])
         if has_any(t, ["좋아", "가자", "나도", "같이", "힘들", "지쳐", "우울", "죽고", "뛰어", "입수", "자살", "그래"]):
-            return (
-                ["...잠깐.", "유스케가 방금 나랑 같이 죽자는 뉘앙스를 풍겼어? 너 안에 들어앉은 게 누구지?"],
-                0,
-                45,
-            )
+            return ["...잠깐.", "유스케가 방금 나랑 같이 죽자는 뉘앙스를 풍겼어? 너 안에 들어앉은 게 누구지?"]
         if has_any(t, ["밥", "먹자", "맛있", "힘내", "걱정", "도와", "사랑", "착하"]):
-            return (
-                ["유스케가 내 걱정을 다 해주고… 내일 해가 서쪽에서 뜨겠네. 정체가 뭐야?"],
-                0,
-                35,
-            )
-        return (
-            random.choice([
-                ["쳇, 뻔한 반응이네. 재미없어~"],
-                ["뭐야 그 시큰둥한 답장은. 역시 살아있는 것밖에 모르는 놈."],
-            ]),
-            0,
-            -4,
-        )
+            return ["유스케가 내 걱정을 다 해주고… 내일 해가 서쪽에서 뜨겠네. 정체가 뭐야?"]
+        return random.choice([
+            ["쳇, 뻔한 반응이네. 재미없어~"],
+            ["뭐야 그 시큰둥한 답장은. 역시 살아있는 것밖에 모르는 놈."],
+        ])
 
-    # 3) 망할 자식 (나카하라 츄야) 판정
+    # 3) 망할 자식 (나카하라 츄야)
     if cid == "chuuya":
         if polite or has_any(t, ["잘생", "멋", "존경", "팬", "사랑", "좋아"]):
-            return (
-                random.choice([
-                    ["...너 오늘 뭘 잘못 처먹었냐? 사과하고 아부 떠는 거 더 기분 나쁘네."],
-                    ["미쳤냐?! 소름 돋으니까 헛소리할 거면 차단한다."],
-                ]),
-                -5,
-                35,
-            )
+            return random.choice([
+                ["...너 오늘 뭘 잘못 처먹었냐? 사과하고 아부 떠는 거 더 기분 나쁘네."],
+                ["미쳤냐?! 소름 돋으니까 헛소리할 거면 차단한다."],
+            ])
         if has_any(t, ["키", "꼬맹", "땅꼬마", "작", "모자", "난쟁", "호빗"]):
-            return (
-                ["야!! 너 내일 아침에 보자마자 천장으로 처박아버린다!!"],
-                -10,
-                -8,
-            )
+            return ["야!! 너 내일 아침에 보자마자 천장으로 처박아버린다!!"]
         if has_any(t, ["능력", "얼굴", "복붙", "사방", "천", "눈", "똑같", "멀미", "토", "헛구역"]):
-            return (
-                ["아 젠장 또 네 놈 능력 얘기냐.", "천 뒤집어쓰고 방에 쳐박혀 있어 그럼."],
-                -5,
-                -8,
-            )
+            return ["아 젠장 또 네 놈 능력 얘기냐.", "천 뒤집어쓰고 방에 쳐박혀 있어 그럼."]
         if has_any(t, ["파쇄", "서류", "난", "내", "아니", "뒤집", "마늘", "카레", "냄새", "오지", "꺼져", "닥쳐"]):
-            return (
-                random.choice([
-                    ["하아?! 네 놈 전적이 몇 번인데 끝까지 오리발이야. 여튼 불쾌한 놈."],
-                    ["누가 그런 거 들고 간댔냐. 여튼 내일 얼굴 본다."],
-                ]),
-                0,
-                -6,
-            )
-        return (
-            random.choice([
-                ["뭐라는 거야, 기분 나쁜 놈. 내일 기어 나오기나 해."],
-                ["하아?! 말투 한 번 띠껍네. 내일 보자."],
-            ]),
-            -2,
-            -4,
-        )
+            return random.choice([
+                ["하아?! 네 놈 전적이 몇 번인데 끝까지 오리발이야. 여튼 불쾌한 놈."],
+                ["누가 그런 거 들고 간댔냐. 여튼 내일 얼굴 본다."],
+            ])
+        return random.choice([
+            ["뭐라는 거야, 기분 나쁜 놈. 내일 기어 나오기나 해."],
+            ["하아?! 말투 한 번 띠껍네. 내일 보자."],
+        ])
 
-    # 4) 아카네 판정
+    # 4) 아카네
     if cid == "akane":
         if polite or has_any(t, ["다쳤", "괜찮", "걱정", "연고", "사랑", "고마", "먹을래", "사줄", "엄마"]):
-            return (
-                random.choice([
-                    ["...너 누구야. 기시는 그런 말 안 해."],
-                    ["...기분 나쁘게 왜 갑자기 상냥한 척해?"],
-                ]),
-                0,
-                35,
-            )
+            return random.choice([
+                ["...너 누구야. 기시는 그런 말 안 해."],
+                ["...기분 나쁘게 왜 갑자기 상냥한 척해?"],
+            ])
         if has_any(t, ["안 보", "눈", "앞", "내 탓", "조심", "부딪", "너도"]):
-            return (
-                ["응. 너도 조심해."],
-                0,
-                -6,
-            )
+            return ["응. 너도 조심해."]
         if has_any(t, ["식당", "밥", "카레", "마늘", "냄새", "먹", "죽", "안 가"]):
-            return (
-                ["알겠어. 내 거 뺏어 먹지 마."],
-                5,
-                -5,
-            )
+            return ["알겠어. 내 거 뺏어 먹지 마."]
         if has_any(t, ["살", "죽", "어", "응", "그래", "생존"]):
-            return (
-                ["그래. 내일 또 복도에서 부딪히지 마."],
-                5,
-                -5,
-            )
-        return (
-            random.choice([
-                ["응."],
-                ["알겠어."],
-            ]),
-            0,
-            -3,
-        )
+            return ["그래. 내일 또 복도에서 부딪히지 마."]
+        return random.choice([["응."], ["알겠어."]])
 
-    # 5) 제비 판정
+    # 5) 제비
     if polite or has_any(t, ["사랑", "좋아", "고마", "미안", "존경", "착하"]):
-        return (
-            random.choice([
-                ["...잠깐. 너 방금 나한테 존댓말 썼냐? 소름 돋게 왜 이래."],
-                ["너 진짜 기시 유스케 맞냐? 오늘 뭘 잘못 먹었네."],
-            ]),
-            0,
-            35,
-        )
+        return random.choice([
+            ["...잠깐. 너 방금 나한테 존댓말 썼냐? 소름 돋게 왜 이래."],
+            ["너 진짜 기시 유스케 맞냐? 오늘 뭘 잘못 먹었네."],
+        ])
     if has_any(t, ["침대", "자", "누워", "아파", "피곤", "귀찮", "안 나", "안 가", "집", "약"]):
-        return (
-            ["하긴, 네가 제 발로 돌아다닐 놈이 아니지. 약이나 챙겨 먹어."],
-            5,
-            -6,
-        )
+        return ["하긴, 네가 제 발로 돌아다닐 놈이 아니지. 약이나 챙겨 먹어."]
     if has_any(t, ["천", "얼굴", "츄야", "능력", "복붙", "바꿔", "벗", "똑같"]):
-        return (
-            ["진짜 볼 때마다 적응 안 되네. 아무튼 눈에 띄지 말고 찌그러져 있어."],
-            0,
-            -6,
-        )
+        return ["진짜 볼 때마다 적응 안 되네. 아무튼 눈에 띄지 말고 찌그러져 있어."]
     if has_any(t, ["살", "죽", "생존", "다자이", "버텨"]):
-        return (
-            ["그래, 기어코 살아남는 건 너 하나만큼은 1등이니까."],
-            5,
-            -5,
-        )
-    return (
-        random.choice([
-            ["뭐라는 거야. 여튼 안 뒤졌으면 다행이고."],
-            ["하아, 여전히 말투 하나는 안 죽었네."],
-        ]),
-        0,
-        -4,
-    )
+        return ["그래, 기어코 살아남는 건 너 하나만큼은 1등이니까."]
+    return random.choice([
+        ["뭐라는 거야. 여튼 안 뒤졌으면 다행이고."],
+        ["하아, 여전히 말투 하나는 안 죽었네."],
+    ])
 
 
 # -------------------------------------------------
 # 3. 상태 관리 및 콜백
 # -------------------------------------------------
-def clamp(val, low=0, high=100):
-    return max(low, min(high, val))
-
-
 def next_minute_str(clock_str: str, add_min: int) -> str:
     h, m = map(int, clock_str.split(":"))
     total = h * 60 + m + add_min
@@ -967,14 +839,10 @@ def init_game():
     st.session_state.phase = "phone"
     st.session_state.phone_view = "list"
     st.session_state.active_chat = None
-    st.session_state.hp = 85
-    st.session_state.suspicion = 0
     st.session_state.read_today = []
     st.session_state.replied_today = []
     st.session_state.msg_counts = {cid: 0 for cid in CONTACTS}
     st.session_state.pending_reply = None
-    st.session_state.last_notice = ""
-    st.session_state.ending_key = None
     st.session_state.histories = {cid: [] for cid in CONTACTS}
     push_today_messages()
 
@@ -989,39 +857,16 @@ def resolve_pending_reply():
     user_text = pending["text"]
     t_npc = pending["t_npc"]
 
-    npc_lines, hp_d, sus_d = judge_and_reply(cid, user_text)
-    first_today = cid not in st.session_state.replied_today
-
-    if not first_today:
-        hp_d = min(0, hp_d)
-        sus_d = max(0, sus_d)
-
+    npc_lines = generate_npc_reply(cid, user_text)
     for line in npc_lines:
         st.session_state.histories[cid].append(
             {"sender": "npc", "text": line, "time": t_npc, "label_time": t_npc}
         )
 
-    st.session_state.hp = clamp(st.session_state.hp + hp_d)
-    st.session_state.suspicion = clamp(st.session_state.suspicion + sus_d)
-
     if cid not in st.session_state.read_today:
         st.session_state.read_today.append(cid)
-    if first_today:
+    if cid not in st.session_state.replied_today:
         st.session_state.replied_today.append(cid)
-
-    notes = []
-    if hp_d != 0:
-        notes.append(f"체력 {'+' if hp_d > 0 else ''}{hp_d}")
-    if sus_d != 0:
-        notes.append(f"의심 {'+' if sus_d > 0 else ''}{sus_d}")
-    st.session_state.last_notice = " / ".join(notes) if notes else ""
-
-    if st.session_state.suspicion >= 100:
-        st.session_state.ending_key = "ending_caught"
-        st.session_state.phase = "ending"
-    elif st.session_state.hp <= 0:
-        st.session_state.ending_key = "ending_hp"
-        st.session_state.phase = "ending"
 
 
 def open_chat(cid: str):
@@ -1030,13 +875,11 @@ def open_chat(cid: str):
         st.session_state.read_today.append(cid)
     st.session_state.active_chat = cid
     st.session_state.phone_view = "chat"
-    st.session_state.last_notice = ""
 
 
 def go_list():
     resolve_pending_reply()
     st.session_state.phone_view = "list"
-    st.session_state.last_notice = ""
 
 
 def queue_free_reply(cid: str, user_text: str):
@@ -1052,7 +895,6 @@ def queue_free_reply(cid: str, user_text: str):
     )
     if cid not in st.session_state.read_today:
         st.session_state.read_today.append(cid)
-    st.session_state.last_notice = ""
     st.session_state.pending_reply = {
         "cid": cid,
         "text": user_text,
@@ -1062,12 +904,6 @@ def queue_free_reply(cid: str, user_text: str):
 
 def finish_today():
     resolve_pending_reply()
-    if st.session_state.suspicion >= 100:
-        st.session_state.ending_key = "ending_caught"
-    elif st.session_state.hp <= 0:
-        st.session_state.ending_key = "ending_hp"
-    else:
-        st.session_state.ending_key = "ending_survive"
     st.session_state.phase = "ending"
 
 
@@ -1076,14 +912,10 @@ REQUIRED_KEYS = (
     "phase",
     "phone_view",
     "active_chat",
-    "hp",
-    "suspicion",
     "read_today",
     "replied_today",
     "msg_counts",
     "pending_reply",
-    "last_notice",
-    "ending_key",
     "histories",
 )
 
@@ -1108,13 +940,12 @@ st.markdown(
 # [A] 핸드폰 화면
 if st.session_state.phase == "phone":
     with st.container(border=True, key="phone_shell"):
-        battery = max(12, st.session_state.hp)
         st.markdown(
-            f'<div class="ios-statusbar">'
-            f'<span>9:30</span>'
-            f'<div class="ios-island"></div>'
-            f'<span class="ios-battery">{battery}</span>'
-            f'</div>',
+            '<div class="ios-statusbar">'
+            '<span>9:30</span>'
+            '<div class="ios-island"></div>'
+            '<span class="ios-battery">60</span>'
+            '</div>',
             unsafe_allow_html=True,
         )
 
@@ -1241,8 +1072,6 @@ if st.session_state.phase == "phone":
                     '</div>'
                     '</div>'
                 )
-            elif st.session_state.last_notice:
-                items.append(f'<div class="ios-sys">{st.session_state.last_notice}</div>')
 
             chat_html = (
                 '<div class="ios-chat-scroll"><div class="ios-chat-inner">'
@@ -1286,7 +1115,6 @@ if st.session_state.phase == "phone":
 
 # [B] 엔딩 화면
 elif st.session_state.phase == "ending":
-    end = ENDINGS.get(st.session_state.ending_key, ENDINGS["ending_survive"])
-    st.markdown(f"### {end['title']}")
-    formatted = end["text"].replace("\n", "<br>")
+    st.markdown(f"### {SURVIVE_ENDING['title']}")
+    formatted = SURVIVE_ENDING["text"].replace("\n", "<br>")
     st.markdown(f'<div class="story-box">{formatted}</div>', unsafe_allow_html=True)
