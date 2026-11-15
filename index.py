@@ -579,15 +579,27 @@ hr {
 BASE_DIR = Path(__file__).resolve().parent
 
 
-@st.cache_data
 def load_image_uri(path_or_url: str) -> str | None:
     if not path_or_url:
         return None
     if path_or_url.startswith(("http://", "https://", "data:")):
         return path_or_url
+
     file_path = BASE_DIR / path_or_url
+    if not file_path.is_file() and file_path.parent.is_dir():
+        stem = file_path.stem.lower()
+        for cand in file_path.parent.iterdir():
+            if (
+                cand.is_file()
+                and cand.stem.lower() == stem
+                and cand.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+            ):
+                file_path = cand
+                break
+
     if not file_path.is_file():
         return None
+
     mime, _ = mimetypes.guess_type(file_path.name)
     mime = mime or "image/png"
     b64 = base64.b64encode(file_path.read_bytes()).decode("utf-8")
@@ -610,9 +622,9 @@ def render_avatar(info: dict, cls_name: str) -> str:
 STATE_VERSION = 7
 
 CONTACTS = {
-    "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.png"},
-    "dazai":  {"name": "자살 희망자", "initial": "자", "color": "#55687a", "img": "images/dazai.png"},
-    "chuuya": {"name": "망할 자식",   "initial": "망", "color": "#b0653b", "img": "images/chuuya.png"},
+    "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
+    "dazai":  {"name": "자살 희망자", "initial": "자", "color": "#55687a", "img": "images/dazai.jpg"},
+    "chuuya": {"name": "망할 자식",   "initial": "망", "color": "#b0653b", "img": "images/chuuya.jpg"},
     "akane":  {"name": "아카네",     "initial": "아", "color": "#6e6a68", "img": "images/akane.png"},
     "jebi":   {"name": "제비",       "initial": "제", "color": "#4f6d63", "img": "images/jebi.png"},
 }
