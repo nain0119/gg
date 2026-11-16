@@ -661,6 +661,14 @@ def has_any(text: str, words: list[str]) -> bool:
     return any(w in text for w in words)
 
 
+FLIRT_PRAISE_WORDS = [
+    "안아줘", "안아주", "안아 주", "안아달", "안아 달", "안아보", "안아 보",
+    "포옹", "안길", "안겨", "잘생", "존잘", "멋있", "멋지", "멋져",
+    "예쁘", "예뻐", "이쁘", "이뻐", "귀엽", "귀여", "뽀뽀", "키스",
+    "사귀", "사랑", "좋아해", "좋아함", "반했", "설레", "섹시", "결혼",
+]
+
+
 def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
     """(답장 문구 리스트, 이후 무응답 차단 여부)"""
     t = text.strip()
@@ -698,6 +706,11 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
 
     # 2) 자살 희망자 (다자이 오사무)
     if cid == "dazai":
+        # 안아주세요 / 잘생겼어요 등 주접·애정 표현 -> "갑자기? 으윽, 소름끼쳐!"
+        if has_any(t, FLIRT_PRAISE_WORDS):
+            st.session_state.dazai_stage = "normal"
+            return (["갑자기? 으윽, 소름끼쳐!"], False)
+
         rejecting_suicide = has_any(
             t,
             [
@@ -712,7 +725,7 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
         )
         ooc_sweet = has_any(
             t,
-            ["미안", "죄송", "고마워", "고맙", "감사", "힘내", "화이팅", "응원", "사과", "잘못했", "사랑해"],
+            ["미안", "죄송", "고마워", "고맙", "감사", "힘내", "화이팅", "응원", "사과", "잘못했"],
         )
 
         # 유스케가 아닌 것 같은 대답 -> "자네 누구야?" 한 마디 후 영구 무응답
@@ -828,7 +841,11 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
 
     # 3) 망할 자식 (나카하라 츄야)
     if cid == "chuuya":
-        if polite or has_any(t, ["잘생", "멋", "존경", "팬", "사랑", "좋아"]):
+        # 안아주세요 / 잘생겼어요 등 주접·애정 표현 -> "좆같은 소리 하지 마라, 기시."
+        if has_any(t, FLIRT_PRAISE_WORDS):
+            return (["좆같은 소리 하지 마라, 기시."], False)
+
+        if polite or has_any(t, ["존경", "팬", "좋아"]):
             return (
                 random.choice([
                     ["...너 오늘 뭘 잘못 처먹었냐? 사과하고 아부 떠는 거 더 기분 나쁘네."],
