@@ -581,7 +581,7 @@ def render_avatar(info: dict, cls_name: str) -> str:
 # -------------------------------------------------
 # 1. 인물 및 하루치 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 14
+STATE_VERSION = 15
 
 CONTACTS = {
     "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
@@ -669,6 +669,29 @@ FLIRT_PRAISE_WORDS = [
 ]
 
 
+def is_dazai_joke_refuse(text: str) -> bool:
+    return has_any(
+        text,
+        [
+            "싫은데", "싫어", "싫음", "시른데", "시러", "안 해", "안해", "안 함",
+            "못 해", "못해", "내 맘", "내맘", "또 할", "ㄴㄴ", "노노",
+            "글쎄", "어쩔", "어쩌라고", "알빠", "개소리", "아니",
+        ],
+    )
+
+
+def is_dazai_joke_agree(text: str) -> bool:
+    if is_dazai_joke_refuse(text):
+        return False
+    clean_t = re.sub(r"[!?.~ㅋㅎㅠㅜ\s]", "", text)
+    if clean_t in ("응", "어", "ㅇ", "ㅇㅇ", "ㅇㅋ", "오케이", "오키", "그래", "알겠어", "알았어"):
+        return True
+    return has_any(
+        text,
+        ["알겠어", "알았어", "그럴게", "안 할게", "안할게", "삼갈게", "그래", "오케이", "ㅇㅋ"],
+    )
+
+
 def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
     """(답장 문구 리스트, 이후 무응답 차단 여부)"""
     t = text.strip()
@@ -708,7 +731,7 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
     if cid == "dazai":
         # 안아주세요 / 잘생겼어요 등 주접·애정 표현 -> "갑자기? 으윽, 소름끼쳐!"
         if has_any(t, FLIRT_PRAISE_WORDS):
-            st.session_state.dazai_stage = "normal"
+            st.session_state.dazai_stage = "creeped"
             return (["갑자기? 으윽, 소름끼쳐!"], False)
 
         rejecting_suicide = has_any(
@@ -732,7 +755,24 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
         if polite or ooc_suicidal or ooc_sweet:
             return (["자네 누구야?"], True)
 
-        # 단계 1: "정말로? 의외네~" 상태에서 긍정적("우리 친구잖아" 등)으로 답하면 "자네 누구야?" 후 종료
+        # 단계 A-1: 소름끼쳐 한 직후 "농담이야" 등 입력 시
+        if st.session_state.get("dazai_stage") == "creeped":
+            if has_any(t, ["농담", "장난", "구라", "뻥", "놀린", "놀렸", "놀리", "웃자고", "거짓말", "아님", "아니야"]):
+                st.session_state.dazai_stage = "creeped_joke"
+                return (["휴, 다행이네~ 역겨우니까 다음부터는 그런 농담 삼가줄래?"], False)
+            st.session_state.dazai_stage = "normal"
+
+        # 단계 A-2: "그런 농담 삼가줄래?" 이후 "싫은데" / "응, 알겠어" 분기
+        if st.session_state.get("dazai_stage") == "creeped_joke":
+            if is_dazai_joke_refuse(t):
+                st.session_state.dazai_stage = "ended"
+                return (["악취미라니까~"], True)
+            if is_dazai_joke_agree(t):
+                st.session_state.dazai_stage = "ended"
+                return ([], True)
+            st.session_state.dazai_stage = "normal"
+
+        # 단계 B: "정말로? 의외네~" 상태에서 긍정적("우리 친구잖아" 등)으로 답하면 "자네 누구야?" 후 종료
         if st.session_state.get("dazai_stage") == "surprised":
             cynical_reason = has_any(
                 t,
@@ -756,7 +796,7 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
                     False,
                 )
 
-        # 단계 2: 상처받은 상태("hurt")일 때 "어쩌라고" 식의 반응이면 "쳇...... 매정해라" 로 마무리
+        # 단계 C: 상처받은 상태("hurt")일 때 "어쩌라고" 식의 반응이면 "쳇...... 매정해라" 로 마무리
         if st.session_state.get("dazai_stage") == "hurt":
             if has_any(
                 t,
@@ -1004,6 +1044,17 @@ def queue_free_reply(cid: str, user_text: str):
         st.session_state.read_today.append(cid)
 
     if cid in st.session_state.ghosted:
+        return
+
+    # "그런 농담 삼가줄래?" 직후 수락("응/알겠어") 시에는 추가 답장 없이 깔끔하게 대화 종료
+    if (
+        cid == "dazai"
+        and st.session_state.get("dazai_stage") == "creeped_joke"
+        and not is_polite_korean(user_text)
+        and is_dazai_joke_agree(user_text)
+    ):
+        st.session_state.dazai_stage = "ended"
+        st.session_state.ghosted.append(cid)
         return
 
     st.session_state.pending_reply = {
