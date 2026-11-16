@@ -619,7 +619,7 @@ def render_avatar(info: dict, cls_name: str) -> str:
 # -------------------------------------------------
 # 1. 인물 및 하루치 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 12
+STATE_VERSION = 13
 
 CONTACTS = {
     "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
@@ -743,7 +743,7 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
             False,
         )
 
-    # 2) 자살 희망자 (다자이 오사무) - 기시 군 호칭 + 혐관러브 톤 + 이상할 시 "자네 누구야?" 후 무응답
+    # 2) 자살 희망자 (다자이 오사무)
     if cid == "dazai":
         rejecting_suicide = has_any(
             t,
@@ -766,7 +766,31 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
         if polite or ooc_suicidal or ooc_sweet:
             return (["자네 누구야?"], True)
 
-        # 상처받은 상태일 때 "어쩌라고" 식의 반응이면 "쳇...... 매정해라" 로 마무리
+        # 단계 1: "정말로? 의외네~" 상태에서 긍정적("우리 친구잖아" 등)으로 답하면 "자네 누구야?" 후 종료
+        if st.session_state.get("dazai_stage") == "surprised":
+            cynical_reason = has_any(
+                t,
+                ["이자", "갚", "빚", "부려", "이용", "목숨", "귀찮", "시끄", "꺼져", "닥쳐", "어쩌라고", "알빠", "아니", "안 ", "싫"],
+            )
+            if not cynical_reason and has_any(
+                t,
+                [
+                    "친구", "친하", "우정", "우리 사이", "당연", "좋아", "기분",
+                    "도와", "돕고", "착하", "불쌍", "선물", "원래", "너니까",
+                    "아끼", "소중", "걱정", "응", "어", "그래", "마음",
+                ],
+            ):
+                st.session_state.dazai_stage = "ended"
+                return (["자네 누구야?"], True)
+
+            st.session_state.dazai_stage = "normal"
+            if has_any(t, ["이자", "갚", "빚", "이용", "부려", "목숨"]):
+                return (
+                    ["하하! 그렇지, 기시 군이 공짜로 줄 리가 없지. 역시 못됐다니까~"],
+                    False,
+                )
+
+        # 단계 2: 상처받은 상태("hurt")일 때 "어쩌라고" 식의 반응이면 "쳇...... 매정해라" 로 마무리
         if st.session_state.get("dazai_stage") == "hurt":
             if has_any(
                 t,
@@ -795,15 +819,8 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
             st.session_state.dazai_stage = "hurt"
             return ([f"뭐어? {echo} 말이 너무하잖아! 섬세한 내 마음이 상처받았어!"], False)
 
-        if has_any(t, ["츄야", "꼬맹", "모자", "낙서", "땅꼬마", "키", "중력"]):
-            return (
-                random.choice([
-                    ["지금 나랑 톡하면서 그 땅꼬마 얘기를 꺼낸 거야, 기시 군?"],
-                    ["흐음~ 기시 군한테는 나만 있으면 되는 거 아니었나? 섭섭하네."],
-                ]),
-                False,
-            )
-        if has_any(t, ["돈", "엔", "100", "1000", "백", "천", "거지", "지갑", "빌려", "안 줘", "못 줘", "일해", "월급", "양심", "싫", "개소리", "미친"]):
+        # 거절 / 욕설 반응 ("안 줘", "돈 없어", "거지" 등)
+        if has_any(t, ["거지", "빈털터리", "안 줘", "못 줘", "안 빌", "못 빌", "안 줄", "못 줄", "돈 없", "없어", "안 돼", "안돼", "일해", "월급", "양심", "싫", "개소리", "미친", "ㄴㄴ", "노노"]):
             return (
                 random.choice([
                     ["으응~ 역시 기시 군은 나한테만 매몰차단 말이지?", "그 쌀쌀맞은 반응이 보고 싶어서 보낸 거긴 하지만."],
@@ -813,11 +830,21 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
                 ]),
                 False,
             )
-        if has_any(t, ["계좌", "가져가", "던져", "줄게", "보내", "먹어"]):
+
+        # "응" / "알겠어" / "좋아" / 빌려주겠다는 반응 -> "정말로? 의외네~"
+        clean_t = re.sub(r"[!?.~ㅋㅎㅠㅜ\s]", "", t)
+        if clean_t in ("응", "어", "ㅇ", "ㅇㅇ", "ㅇㅋ", "오케이", "오키", "그래", "좋아", "알겠어", "알았어") or has_any(
+            t,
+            ["알겠어", "알았어", "좋아", "빌려줄", "빌려주", "줄게", "가져가", "계좌", "보내줄", "보낼게", "오케이", "ㅇㅋ", "그럴게"],
+        ):
+            st.session_state.dazai_stage = "surprised"
+            return (["정말로? 의외네~"], False)
+
+        if has_any(t, ["츄야", "꼬맹", "모자", "낙서", "땅꼬마", "키", "중력"]):
             return (
                 random.choice([
-                    ["오오?! 기시 군이 나한테 선뜻 돈을 다 주겠다고? 이거 혹시 사랑의 표현인가~"],
-                    ["이야, 이러면 내가 감동해서 기시 군 방 앞으로 당장 달려갈 수밖에 없잖아?"],
+                    ["지금 나랑 톡하면서 그 땅꼬마 얘기를 꺼낸 거야, 기시 군?"],
+                    ["흐음~ 기시 군한테는 나만 있으면 되는 거 아니었나? 섭섭하네."],
                 ]),
                 False,
             )
