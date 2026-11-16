@@ -619,7 +619,7 @@ def render_avatar(info: dict, cls_name: str) -> str:
 # -------------------------------------------------
 # 1. 인물 및 하루치 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 9
+STATE_VERSION = 10
 
 CONTACTS = {
     "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
@@ -642,8 +642,8 @@ TODAY_INCOMING = {
         "time": "오전 9:11",
         "clock": "09:11",
         "lines": [
-            "유스케~",
-            "나 지금 다리 위인데 물 색깔 예술이야. 같이 뛰어내릴래?",
+            "기시, 오늘 왜 코빼기도 안 보여?",
+            "네가 옆에서 잔소리 안 하니까 오늘따라 강물이 영 심심하네.",
         ],
     },
     "chuuya": {
@@ -673,7 +673,7 @@ SURVIVE_ENDING = {
     "title": "오늘 하루 무사 통과",
     "text": (
         "오늘 하루 침대 밖으로 한 발짝도 안 나가고 직접 친 답장만으로 포트 마피아를 버텨낸다. "
-        "모리의 약은 퀵으로 배달 오고, 다자이는 다리 위에서 헛소리를 멈추며, 츄야는 내일 보자고 이를 갈지만 "
+        "모리의 약은 퀵으로 배달 오고, 다자이는 여전히 묘한 연락을 남겨 두며, 츄야는 내일 보자고 이를 갈지만 "
         "일단 오늘 하루는 무사히 지나갔다. 살아가는 것만으로도 수고했다."
     ),
 }
@@ -707,106 +707,176 @@ def has_any(text: str, words: list[str]) -> bool:
     return any(w in text for w in words)
 
 
-def generate_npc_reply(cid: str, text: str) -> list[str]:
+def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
+    """(답장 문구 리스트, 이후 무응답 차단 여부)"""
     t = text.strip()
     polite = is_polite_korean(t)
 
     # 1) 보스 (모리 오가이)
     if cid == "mori":
         if polite:
-            return random.choice([
-                ["...어라?", "방금 나한테 존댓말 썼니? 유스케 군 핸드폰 누가 훔쳐 갔니?"],
-                ["보스님이라니. 유스케 군 머리를 어디 세게 박은 건 아니지? ^^"],
-            ])
+            return (
+                random.choice([
+                    ["...어라?", "방금 나한테 존댓말 썼니? 유스케 군 핸드폰 누가 훔쳐 갔니?"],
+                    ["보스님이라니. 유스케 군 머리를 어디 세게 박은 건 아니지? ^^"],
+                ]),
+                False,
+            )
         if has_any(t, ["사랑", "좋아", "존경", "보고 싶", "보고싶", "최고", "착하"]):
-            return ["어머나. 약 기운이 잘못 돌았나 보구나. 확인하러 좀 갈까? ^^"]
+            return (["어머나. 약 기운이 잘못 돌았나 보구나. 확인하러 좀 갈까? ^^"], False)
         if has_any(t, ["면상", "얼굴", "수명", "꺼져", "닥쳐", "죽", "귀찮", "시끄", "미친", "징그", "소름", "변태", "싫", "해부", "안 가", "안 감", "못 가", "못 나"]):
-            return random.choice([
-                ["어머 기운 넘치네.", "그럼 오늘 치 약은 퀵으로 보내줄게."],
-                ["하하, 그 험한 입을 보니 진짜 유스케 군이 맞구나. 약 챙겨둘게."],
-            ])
+            return (
+                random.choice([
+                    ["어머 기운 넘치네.", "그럼 오늘 치 약은 퀵으로 보내줄게."],
+                    ["하하, 그 험한 입을 보니 진짜 유스케 군이 맞구나. 약 챙겨둘게."],
+                ]),
+                False,
+            )
         if has_any(t, ["약", "진료", "아파", "아프", "병", "기침", "피", "살려", "사탕", "주사", "퀵"]):
-            return ["그래그래, 제 발로 기어 나올 리가 없지. 오늘 치 약 바로 보낸다."]
-        return random.choice([
-            ["후후, 심심할 때마다 톡이나 하려무나. 약은 보내둘게."],
-            ["하하 여전히 뻔뻔해서 안심했네. 잘 먹고 살아남으렴."],
-        ])
+            return (["그래그래, 제 발로 기어 나올 리가 없지. 오늘 치 약 바로 보낸다."], False)
+        return (
+            random.choice([
+                ["후후, 심심할 때마다 톡이나 하려무나. 약은 보내둘게."],
+                ["하하 여전히 뻔뻔해서 안심했네. 잘 먹고 살아남으렴."],
+            ]),
+            False,
+        )
 
-    # 2) 자살 희망자 (다자이 오사무)
+    # 2) 자살 희망자 (다자이 오사무) - 기시 호칭 + 묘한 텐션 + 이상한 답장 시 "자네 누구야?" 후 무응답
     if cid == "dazai":
-        if polite:
-            return random.choice([
-                ["...잠깐.", "유스케가 지금 나한테 존댓말을 쓴 거야? 너 누구냐."],
-                ["어라라? 유스케가 예의범절을 삼켰나? 수상한데~"],
-            ])
+        rejecting_suicide = has_any(
+            t,
+            [
+                "개소리", "미친", "혼자", "싫", "안 해", "안 감", "안 가",
+                "살", "생존", "이승", "꺼져", "닥쳐", "죽지 마", "뛰어내리지 마",
+                "들어가지 마", "안 죽", "죽기 싫", "그만", "헛소리",
+            ],
+        )
+        ooc_suicidal = (not rejecting_suicide) and has_any(
+            t,
+            ["죽고 싶", "같이 죽", "나도 죽", "같이 뛰어", "입수하", "자살하", "살기 싫", "힘들어", "우울해", "지쳤"],
+        )
+        ooc_sweet = has_any(
+            t,
+            ["미안", "죄송", "고마워", "고맙", "감사", "힘내", "화이팅", "응원", "사과", "잘못했"],
+        )
+
+        # 유스케가 아닌 것 같은 대답 -> "자네 누구야?" 단 한 마디 후 영구 답장 차단
+        if polite or ooc_suicidal or ooc_sweet:
+            return (["자네 누구야?"], True)
+
         if has_any(t, ["츄야", "꼬맹", "모자", "낙서", "땅꼬마", "키", "중력"]):
-            return ["오~ 역시 츄야 놀릴 때만 장단이 척척 맞는다니까."]
-        if has_any(t, ["개소리", "미친", "혼자", "싫", "안 해", "안 감", "살", "생존", "이승", "꺼져", "닥쳐", "안 죽", "죽기 싫", "의미", "면상"]):
-            return random.choice([
-                ["흥, 여전히 노잼 생존주의자네. 치사해."],
-                ["하긴 네가 나 좋아서 나올 리가 없지. 납득했어~"],
-            ])
-        if has_any(t, ["좋아", "가자", "나도", "같이", "힘들", "지쳐", "우울", "죽고", "뛰어", "입수", "자살", "그래"]):
-            return ["...잠깐.", "유스케가 방금 나랑 같이 죽자는 뉘앙스를 풍겼어? 너 안에 들어앉은 게 누구지?"]
-        if has_any(t, ["밥", "먹자", "맛있", "힘내", "걱정", "도와", "사랑", "착하"]):
-            return ["유스케가 내 걱정을 다 해주고… 내일 해가 서쪽에서 뜨겠네. 정체가 뭐야?"]
-        return random.choice([
-            ["쳇, 뻔한 반응이네. 재미없어~"],
-            ["뭐야 그 시큰둥한 답장은. 역시 살아있는 것밖에 모르는 놈."],
-        ])
+            return (
+                random.choice([
+                    ["뭐야, 지금 나랑 연락하면서 다른 남자 얘기를 꺼낸 거야?"],
+                    ["흐음, 기시한테는 나만 있으면 되는 거 아니었나?"],
+                ]),
+                False,
+            )
+        if has_any(t, ["아파", "아프", "약", "침대", "집", "누워", "피곤", "귀찮", "못 나", "안 나"]):
+            return (
+                random.choice([
+                    ["응? 어디 아픈 거야, 기시.", "진료실 갈 힘도 없으면 내가 방으로 갈게. 문 열어 둬."],
+                    ["기시가 그렇게 기운이 없다니 신경 쓰이네. 이따 얼굴 보러 가도 되지?"],
+                ]),
+                False,
+            )
+        if rejecting_suicide:
+            return (
+                random.choice([
+                    ["하하, 역시 기시답네.", "네가 그렇게 말려줘야 나도 좀 살 기분이 든다니까."],
+                    ["어라, 내가 진짜 들어가 버리면 아쉽다는 뜻으로 들어도 돼?"],
+                    ["그럼 기시가 직접 와서 끌어내려 주든가. 안 그럼 나 진짜 물에 들어간다?"],
+                ]),
+                False,
+            )
+        if has_any(t, ["보고", "만나", "보러", "와", "이따", "밤", "심심"]):
+            return (
+                random.choice([
+                    ["오, 기시가 먼저 그런 소리를 다 하네. 지금 당장 갈까?"],
+                    ["후후, 그렇게 말하면 진짜 기다린다? 오늘 밤에 문 두드려도 놀라지 마."],
+                ]),
+                False,
+            )
+        return (
+            random.choice([
+                ["그렇게 튕기면서도 결국 내 연락엔 꼬박꼬박 답장해 주네, 기시."],
+                ["역시 기시는 나랑 말 섞을 때가 제일 솔직하다니까~"],
+                ["이따 밤에 잠깐 얼굴이나 볼래? 네 숙소 앞 지나갈지도 모르는데."],
+            ]),
+            False,
+        )
 
     # 3) 망할 자식 (나카하라 츄야)
     if cid == "chuuya":
         if polite or has_any(t, ["잘생", "멋", "존경", "팬", "사랑", "좋아"]):
-            return random.choice([
-                ["...너 오늘 뭘 잘못 처먹었냐? 사과하고 아부 떠는 거 더 기분 나쁘네."],
-                ["미쳤냐?! 소름 돋으니까 헛소리할 거면 차단한다."],
-            ])
+            return (
+                random.choice([
+                    ["...너 오늘 뭘 잘못 처먹었냐? 사과하고 아부 떠는 거 더 기분 나쁘네."],
+                    ["미쳤냐?! 소름 돋으니까 헛소리할 거면 차단한다."],
+                ]),
+                False,
+            )
         if has_any(t, ["키", "꼬맹", "땅꼬마", "작", "모자", "난쟁", "호빗"]):
-            return ["야!! 너 내일 아침에 보자마자 천장으로 처박아버린다!!"]
+            return (["야!! 너 내일 아침에 보자마자 천장으로 처박아버린다!!"], False)
         if has_any(t, ["능력", "얼굴", "복붙", "사방", "천", "눈", "똑같", "멀미", "토", "헛구역"]):
-            return ["아 젠장 또 네 놈 능력 얘기냐.", "천 뒤집어쓰고 방에 쳐박혀 있어 그럼."]
+            return (["아 젠장 또 네 놈 능력 얘기냐.", "천 뒤집어쓰고 방에 쳐박혀 있어 그럼."], False)
         if has_any(t, ["파쇄", "서류", "난", "내", "아니", "뒤집", "마늘", "카레", "냄새", "오지", "꺼져", "닥쳐"]):
-            return random.choice([
-                ["하아?! 네 놈 전적이 몇 번인데 끝까지 오리발이야. 여튼 불쾌한 놈."],
-                ["누가 그런 거 들고 간댔냐. 여튼 내일 얼굴 본다."],
-            ])
-        return random.choice([
-            ["뭐라는 거야, 기분 나쁜 놈. 내일 기어 나오기나 해."],
-            ["하아?! 말투 한 번 띠껍네. 내일 보자."],
-        ])
+            return (
+                random.choice([
+                    ["하아?! 네 놈 전적이 몇 번인데 끝까지 오리발이야. 여튼 불쾌한 놈."],
+                    ["누가 그런 거 들고 간댔냐. 여튼 내일 얼굴 본다."],
+                ]),
+                False,
+            )
+        return (
+            random.choice([
+                ["뭐라는 거야, 기분 나쁜 놈. 내일 기어 나오기나 해."],
+                ["하아?! 말투 한 번 띠껍네. 내일 보자."],
+            ]),
+            False,
+        )
 
     # 4) 아카네
     if cid == "akane":
         if polite or has_any(t, ["다쳤", "괜찮", "걱정", "연고", "사랑", "고마", "먹을래", "사줄", "엄마"]):
-            return random.choice([
-                ["...너 누구야. 기시는 그런 말 안 해."],
-                ["...기분 나쁘게 왜 갑자기 상냥한 척해?"],
-            ])
+            return (
+                random.choice([
+                    ["...너 누구야. 기시는 그런 말 안 해."],
+                    ["...기분 나쁘게 왜 갑자기 상냥한 척해?"],
+                ]),
+                False,
+            )
         if has_any(t, ["안 보", "눈", "앞", "내 탓", "조심", "부딪", "너도"]):
-            return ["응. 너도 조심해."]
+            return (["응. 너도 조심해."], False)
         if has_any(t, ["식당", "밥", "카레", "마늘", "냄새", "먹", "죽", "안 가"]):
-            return ["알겠어. 내 거 뺏어 먹지 마."]
+            return (["알겠어. 내 거 뺏어 먹지 마."], False)
         if has_any(t, ["살", "죽", "어", "응", "그래", "생존"]):
-            return ["그래. 내일 또 복도에서 부딪히지 마."]
-        return random.choice([["응."], ["알겠어."]])
+            return (["그래. 내일 또 복도에서 부딪히지 마."], False)
+        return (random.choice([["응."], ["알겠어."]]), False)
 
     # 5) 제비
     if polite or has_any(t, ["사랑", "좋아", "고마", "미안", "존경", "착하"]):
-        return random.choice([
-            ["...잠깐. 너 방금 나한테 존댓말 썼냐? 소름 돋게 왜 이래."],
-            ["너 진짜 기시 유스케 맞냐? 오늘 뭘 잘못 먹었네."],
-        ])
+        return (
+            random.choice([
+                ["...잠깐. 너 방금 나한테 존댓말 썼냐? 소름 돋게 왜 이래."],
+                ["너 진짜 기시 유스케 맞냐? 오늘 뭘 잘못 먹었네."],
+            ]),
+            False,
+        )
     if has_any(t, ["침대", "자", "누워", "아파", "피곤", "귀찮", "안 나", "안 가", "집", "약"]):
-        return ["하긴, 네가 제 발로 돌아다닐 놈이 아니지. 약이나 챙겨 먹어."]
+        return (["하긴, 네가 제 발로 돌아다닐 놈이 아니지. 약이나 챙겨 먹어."], False)
     if has_any(t, ["천", "얼굴", "츄야", "능력", "복붙", "바꿔", "벗", "똑같"]):
-        return ["진짜 볼 때마다 적응 안 되네. 아무튼 눈에 띄지 말고 찌그러져 있어."]
+        return (["진짜 볼 때마다 적응 안 되네. 아무튼 눈에 띄지 말고 찌그러져 있어."], False)
     if has_any(t, ["살", "죽", "생존", "다자이", "버텨"]):
-        return ["그래, 기어코 살아남는 건 너 하나만큼은 1등이니까."]
-    return random.choice([
-        ["뭐라는 거야. 여튼 안 뒤졌으면 다행이고."],
-        ["하아, 여전히 말투 하나는 안 죽었네."],
-    ])
+        return (["그래, 기어코 살아남는 건 너 하나만큼은 1등이니까."], False)
+    return (
+        random.choice([
+            ["뭐라는 거야. 여튼 안 뒤졌으면 다행이고."],
+            ["하아, 여전히 말투 하나는 안 죽었네."],
+        ]),
+        False,
+    )
 
 
 # -------------------------------------------------
@@ -841,6 +911,7 @@ def init_game():
     st.session_state.active_chat = None
     st.session_state.read_today = []
     st.session_state.replied_today = []
+    st.session_state.ghosted = []
     st.session_state.msg_counts = {cid: 0 for cid in CONTACTS}
     st.session_state.pending_reply = None
     st.session_state.histories = {cid: [] for cid in CONTACTS}
@@ -857,11 +928,14 @@ def resolve_pending_reply():
     user_text = pending["text"]
     t_npc = pending["t_npc"]
 
-    npc_lines = generate_npc_reply(cid, user_text)
+    npc_lines, should_ghost = generate_npc_reply(cid, user_text)
     for line in npc_lines:
         st.session_state.histories[cid].append(
             {"sender": "npc", "text": line, "time": t_npc, "label_time": t_npc}
         )
+
+    if should_ghost and cid not in st.session_state.ghosted:
+        st.session_state.ghosted.append(cid)
 
     if cid not in st.session_state.read_today:
         st.session_state.read_today.append(cid)
@@ -895,6 +969,11 @@ def queue_free_reply(cid: str, user_text: str):
     )
     if cid not in st.session_state.read_today:
         st.session_state.read_today.append(cid)
+
+    # 이미 정체가 의심받아 답장 끊긴 상대면 대기열 없이 무응답 처리
+    if cid in st.session_state.ghosted:
+        return
+
     st.session_state.pending_reply = {
         "cid": cid,
         "text": user_text,
@@ -914,6 +993,7 @@ REQUIRED_KEYS = (
     "active_chat",
     "read_today",
     "replied_today",
+    "ghosted",
     "msg_counts",
     "pending_reply",
     "histories",
