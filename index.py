@@ -619,7 +619,7 @@ def render_avatar(info: dict, cls_name: str) -> str:
 # -------------------------------------------------
 # 1. 인물 및 하루치 첫 메시지 데이터
 # -------------------------------------------------
-STATE_VERSION = 11
+STATE_VERSION = 12
 
 CONTACTS = {
     "mori":   {"name": "보스",       "initial": "보", "color": "#8c3b3b", "img": "images/mori.jpg"},
@@ -766,6 +766,35 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
         if polite or ooc_suicidal or ooc_sweet:
             return (["자네 누구야?"], True)
 
+        # 상처받은 상태일 때 "어쩌라고" 식의 반응이면 "쳇...... 매정해라" 로 마무리
+        if st.session_state.get("dazai_stage") == "hurt":
+            if has_any(
+                t,
+                [
+                    "어쩌라고", "어쩌라구", "어쩔", "알빠", "알 바", "알바",
+                    "그래서", "상관", "몰라", "그러든가", "말든가", "상처받든가",
+                    "네 사정", "흥", "귀찮", "응 아니야",
+                ],
+            ):
+                st.session_state.dazai_stage = "ended"
+                return (["쳇...... 매정해라"], True)
+            st.session_state.dazai_stage = "normal"
+
+        # "꺼져" / "좆까" 반응
+        if has_any(t, ["꺼져", "꺼지", "좆까", "ㅈㄲ", "닥쳐"]):
+            has_k = has_any(t, ["꺼져", "꺼지"])
+            has_j = has_any(t, ["좆까", "ㅈㄲ"])
+            if has_k and has_j:
+                echo = "꺼져? 좆까?"
+            elif has_j:
+                echo = "좆까?"
+            elif "닥쳐" in t:
+                echo = "닥쳐?"
+            else:
+                echo = "꺼져?"
+            st.session_state.dazai_stage = "hurt"
+            return ([f"뭐어? {echo} 말이 너무하잖아! 섬세한 내 마음이 상처받았어!"], False)
+
         if has_any(t, ["츄야", "꼬맹", "모자", "낙서", "땅꼬마", "키", "중력"]):
             return (
                 random.choice([
@@ -774,7 +803,7 @@ def generate_npc_reply(cid: str, text: str) -> tuple[list[str], bool]:
                 ]),
                 False,
             )
-        if has_any(t, ["돈", "엔", "100", "1000", "백", "천", "거지", "지갑", "빌려", "안 줘", "못 줘", "일해", "월급", "양심", "꺼져", "닥쳐", "싫", "개소리", "미친"]):
+        if has_any(t, ["돈", "엔", "100", "1000", "백", "천", "거지", "지갑", "빌려", "안 줘", "못 줘", "일해", "월급", "양심", "싫", "개소리", "미친"]):
             return (
                 random.choice([
                     ["으응~ 역시 기시 군은 나한테만 매몰차단 말이지?", "그 쌀쌀맞은 반응이 보고 싶어서 보낸 거긴 하지만."],
@@ -922,6 +951,7 @@ def init_game():
     st.session_state.read_today = []
     st.session_state.replied_today = []
     st.session_state.ghosted = []
+    st.session_state.dazai_stage = "normal"
     st.session_state.msg_counts = {cid: 0 for cid in CONTACTS}
     st.session_state.pending_reply = None
     st.session_state.histories = {cid: [] for cid in CONTACTS}
@@ -1003,6 +1033,7 @@ REQUIRED_KEYS = (
     "read_today",
     "replied_today",
     "ghosted",
+    "dazai_stage",
     "msg_counts",
     "pending_reply",
     "histories",
